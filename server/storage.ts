@@ -1,4 +1,4 @@
-import { type User, type InsertUser, type Preset, type InsertPreset, defaultAmpSettings } from "@shared/schema";
+import { type User, type InsertUser, type Preset, type InsertPreset, type AmpSettings, defaultAmpSettings } from "@shared/schema";
 import { randomUUID } from "crypto";
 
 export interface IStorage {
@@ -158,7 +158,12 @@ export class MemStorage implements IStorage {
 
   async createPreset(insertPreset: InsertPreset): Promise<Preset> {
     const id = randomUUID();
-    const preset: Preset = { id, ...insertPreset };
+    const preset = { 
+      id, 
+      name: insertPreset.name,
+      settings: insertPreset.settings as AmpSettings,
+      isFactory: insertPreset.isFactory ?? false,
+    } satisfies Preset;
     this.presets.set(id, preset);
     return preset;
   }
