@@ -1,8 +1,10 @@
 import { useState, useCallback, useEffect, useRef } from 'react';
 import { useQuery, useMutation } from '@tanstack/react-query';
 import { Settings, HelpCircle, Volume2, VolumeX } from 'lucide-react';
-import { AmpHead } from '@/components/amp/AmpHead';
+import { AmpHeadDisplay } from '@/components/amp/AmpHeadDisplay';
 import { Cabinet } from '@/components/amp/Cabinet';
+import { LeftControlPanel } from '@/components/amp/LeftControlPanel';
+import { RightControlPanel } from '@/components/amp/RightControlPanel';
 import { PresetSelector } from '@/components/amp/PresetSelector';
 import { Button } from '@/components/ui/button';
 import {
@@ -245,18 +247,30 @@ export default function AmpSimulator() {
         </div>
       </header>
 
-      <main className="flex-1 flex flex-col items-center justify-center p-4 gap-6 overflow-auto">
-        <AmpHead
-          settings={settings}
-          onSettingsChange={handleSettingsChange}
-          inputLevel={inputLevel}
-          isClipping={isClipping}
-        />
-        
-        <Cabinet 
-          irName={settings.irBypass ? 'BYPASSED' : currentIR?.name} 
-          isActive={!settings.irBypass}
-        />
+      <main className="flex-1 grid grid-cols-1 lg:grid-cols-[280px_1fr_320px] gap-4 p-4 overflow-auto">
+        <div className="order-2 lg:order-1">
+          <LeftControlPanel
+            settings={settings}
+            onSettingsChange={handleSettingsChange}
+            inputLevel={inputLevel}
+            isClipping={isClipping}
+          />
+        </div>
+
+        <div className="order-1 lg:order-2 flex flex-col gap-4 items-center justify-center">
+          <AmpHeadDisplay isClipping={isClipping} />
+          <Cabinet 
+            irName={settings.irBypass ? 'BYPASSED' : currentIR?.name} 
+            isActive={!settings.irBypass}
+          />
+        </div>
+
+        <div className="order-3">
+          <RightControlPanel
+            settings={settings}
+            onSettingsChange={handleSettingsChange}
+          />
+        </div>
       </main>
 
       <footer className="px-4 py-2 border-t border-border bg-card/50 text-center">
