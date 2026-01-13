@@ -120,10 +120,10 @@ export default function AmpSimulator() {
 
   return (
     <div 
-      className="min-h-screen bg-background flex flex-col"
+      className="h-screen bg-background flex flex-col overflow-hidden"
       data-testid="amp-simulator-page"
     >
-      <header className="flex items-center justify-between px-4 py-2 border-b border-border bg-card/50 backdrop-blur-sm sticky top-0 z-50">
+      <header className="flex-shrink-0 flex items-center justify-between px-4 py-2 border-b border-border bg-card/50 backdrop-blur-sm z-50">
         <div className="flex items-center gap-4">
           <div className="flex items-center gap-2">
             <div className="w-8 h-8 rounded bg-primary flex items-center justify-center">
@@ -247,8 +247,8 @@ export default function AmpSimulator() {
         </div>
       </header>
 
-      <main className="flex-1 grid grid-cols-1 lg:grid-cols-[280px_1fr_320px] gap-4 p-4 overflow-auto">
-        <div className="order-2 lg:order-1">
+      <main className="flex-1 flex items-stretch justify-center gap-4 p-4 min-h-0">
+        <div className="w-64 flex-shrink-0">
           <LeftControlPanel
             settings={settings}
             onSettingsChange={handleSettingsChange}
@@ -257,7 +257,7 @@ export default function AmpSimulator() {
           />
         </div>
 
-        <div className="order-1 lg:order-2 flex flex-col gap-4 items-center justify-center">
+        <div className="flex flex-col flex-1 max-w-2xl min-w-0">
           <AmpHeadDisplay isClipping={isClipping} />
           <Cabinet 
             irName={settings.irBypass ? 'BYPASSED' : currentIR?.name} 
@@ -265,7 +265,7 @@ export default function AmpSimulator() {
           />
         </div>
 
-        <div className="order-3">
+        <div className="w-72 flex-shrink-0">
           <RightControlPanel
             settings={settings}
             onSettingsChange={handleSettingsChange}
@@ -273,7 +273,7 @@ export default function AmpSimulator() {
         </div>
       </main>
 
-      <footer className="px-4 py-2 border-t border-border bg-card/50 text-center">
+      <footer className="flex-shrink-0 px-4 py-2 border-t border-border bg-card/50 text-center">
         <span className="text-xs text-muted-foreground font-mono">
           Use your own IRs — flip IR BYPASS and load your favorite cabinet impulses
         </span>

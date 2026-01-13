@@ -1,41 +1,27 @@
+import { cn } from '@/lib/utils';
+
 interface CabinetProps {
   irName?: string;
   isActive?: boolean;
 }
 
-export function Cabinet({ irName = 'DJENT CRUSH 4x12', isActive = true }: CabinetProps) {
+export function Cabinet({ irName = 'Default IR', isActive = true }: CabinetProps) {
   return (
     <div 
-      className="relative w-full max-w-3xl mx-auto"
+      className="relative w-full"
       data-testid="cabinet"
     >
-      <div className="cabinet-body tolex-texture rounded-lg border border-neutral-800 overflow-hidden">
-        <div className="flex items-center justify-between px-6 py-3 border-b border-neutral-800/50">
-          <div className="flex items-center gap-3">
-            <div className="w-4 h-4 rounded-full bg-neutral-700 border border-neutral-600" />
-            <div className="w-4 h-4 rounded-full bg-neutral-700 border border-neutral-600" />
-          </div>
-          <div className="flex items-center gap-4">
-            <span className="text-sm font-bold uppercase tracking-widest text-primary/80">
-              DJENT SLAYER
-            </span>
-            <span className="text-xs font-mono text-muted-foreground">
-              4x12
-            </span>
-          </div>
-          <div className="flex items-center gap-3">
-            <div className="w-4 h-4 rounded-full bg-neutral-700 border border-neutral-600" />
-            <div className="w-4 h-4 rounded-full bg-neutral-700 border border-neutral-600" />
-          </div>
-        </div>
-
-        <div className="relative p-4">
-          <div className="cabinet-grill rounded-lg aspect-[4/3] relative overflow-hidden border border-neutral-800">
-            <div className="absolute inset-0 flex flex-wrap items-center justify-center gap-8 p-8">
-              {[0, 1, 2, 3].map((i) => (
+      <div className="cabinet-body tolex-texture rounded-b-lg border border-t-0 border-neutral-700 overflow-hidden">
+        <div className="p-3">
+          <div 
+            className="cabinet-grill rounded-lg border border-neutral-800/50 overflow-hidden" 
+            style={{ aspectRatio: '16/9' }}
+          >
+            <div className="grid grid-cols-2 gap-2 h-full p-3">
+              {[1, 2, 3, 4].map((speaker) => (
                 <div
-                  key={i}
-                  className="w-32 h-32 md:w-40 md:h-40 rounded-full relative"
+                  key={speaker}
+                  className="relative rounded-full flex items-center justify-center overflow-hidden"
                   style={{
                     background: `
                       radial-gradient(circle at 50% 50%, 
@@ -50,10 +36,11 @@ export function Cabinet({ irName = 'DJENT CRUSH 4x12', isActive = true }: Cabine
                       inset 0 0 40px rgba(0,0,0,0.4),
                       0 2px 4px rgba(0,0,0,0.5)
                     `,
+                    aspectRatio: '1/1',
                   }}
                 >
                   <div 
-                    className="absolute inset-4 rounded-full"
+                    className="absolute inset-[10%] rounded-full"
                     style={{
                       background: `
                         radial-gradient(circle at 50% 50%,
@@ -67,55 +54,33 @@ export function Cabinet({ irName = 'DJENT CRUSH 4x12', isActive = true }: Cabine
                     }}
                   />
                   <div 
-                    className="absolute inset-1/4 rounded-full bg-neutral-900"
+                    className="absolute inset-[30%] rounded-full bg-neutral-900"
                     style={{
                       boxShadow: 'inset 0 0 10px rgba(0,0,0,0.8)',
                     }}
                   >
-                    <div className="absolute inset-1/4 rounded-full bg-neutral-800/50" />
+                    <div className="absolute inset-[30%] rounded-full bg-neutral-800/50" />
                   </div>
                 </div>
               ))}
             </div>
-
-            <div 
-              className={`absolute bottom-4 left-1/2 -translate-x-1/2 flex items-center gap-2 px-3 py-1.5 rounded-full border ${
-                isActive 
-                  ? 'bg-neutral-900/80 border-neutral-700' 
-                  : 'bg-amber-900/30 border-amber-700/50'
-              }`}
-              data-testid="cabinet-status"
-            >
-              <div className={`w-2 h-2 rounded-full ${
-                isActive 
-                  ? 'bg-green-500 led-glow-green' 
-                  : 'bg-amber-500 led-glow-amber'
-              }`} />
-              <span className={`text-[10px] font-mono uppercase tracking-wide ${
-                isActive ? 'text-green-400' : 'text-amber-400'
-              }`}>
-                {irName}
-              </span>
-            </div>
           </div>
         </div>
 
-        <div className="flex items-center justify-between px-6 py-3 border-t border-neutral-800/50">
-          <div className="flex items-center gap-2">
-            <div className="w-6 h-6 rounded bg-neutral-700 border border-neutral-600 flex items-center justify-center">
-              <div className="w-2 h-2 rounded-full bg-neutral-500" />
-            </div>
-          </div>
-          <div className="flex items-center gap-6">
-            <div className="h-2 w-16 rounded-full bg-neutral-800" />
-            <span className="text-xs text-muted-foreground font-mono">MADE FOR DJENT</span>
-            <div className="h-2 w-16 rounded-full bg-neutral-800" />
-          </div>
-          <div className="flex items-center gap-2">
-            <div className="w-6 h-6 rounded bg-neutral-700 border border-neutral-600 flex items-center justify-center">
-              <div className="w-2 h-2 rounded-full bg-neutral-500" />
-            </div>
-          </div>
+        <div className="flex items-center justify-center gap-4 px-4 py-2 bg-neutral-900/60 border-t border-neutral-800/50">
+          <div className={cn(
+            "w-2 h-2 rounded-full transition-all",
+            isActive 
+              ? "bg-green-500 led-glow-green" 
+              : "bg-amber-500 led-glow-amber"
+          )} />
+          <span className={cn(
+            "text-[10px] font-mono tracking-widest uppercase",
+            isActive ? "text-green-400" : "text-amber-400"
+          )}>
+            {irName}
+          </span>
+          <span className="text-[9px] font-bold text-muted-foreground">4x12</span>
         </div>
       </div>
     </div>

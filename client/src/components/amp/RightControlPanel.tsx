@@ -15,22 +15,30 @@ export function RightControlPanel({
 }: RightControlPanelProps) {
   return (
     <div 
-      className="flex flex-col gap-6 p-6 amp-chassis metal-brushed rounded-lg border border-neutral-700 h-full"
+      className="flex flex-col h-full amp-panel rounded-lg border border-neutral-800 overflow-hidden"
       data-testid="right-control-panel"
     >
-      <div className="text-center border-b border-neutral-700/50 pb-4">
-        <span className="text-lg font-bold tracking-widest text-accent">OVERDRIVE</span>
+      <div className="px-4 py-3 bg-neutral-900/80 border-b border-neutral-800">
+        <span className="text-sm font-bold tracking-[0.3em] text-accent uppercase">OVERDRIVE</span>
       </div>
 
-      <div className="flex flex-col items-center gap-4">
-        <RotaryKnob
-          value={settings.drive}
-          label="DRIVE"
-          onChange={(v) => onSettingsChange({ drive: v })}
-          size="lg"
-        />
-        
-        <div className="flex gap-4 justify-center">
+      <div className="flex-1 flex flex-col gap-6 p-5">
+        <div className="flex items-center justify-center gap-6">
+          <RotaryKnob
+            value={settings.drive}
+            label="DRIVE"
+            onChange={(v) => onSettingsChange({ drive: v })}
+            size="lg"
+          />
+          <RotaryKnob
+            value={settings.masterVolume}
+            label="MASTER"
+            onChange={(v) => onSettingsChange({ masterVolume: v })}
+            size="lg"
+          />
+        </div>
+
+        <div className="flex items-center justify-center gap-3">
           <ToggleSwitch
             isOn={settings.punish}
             label="PUNISH"
@@ -50,43 +58,36 @@ export function RightControlPanel({
             variant="boost"
           />
         </div>
+
+        <div className="h-px bg-gradient-to-r from-transparent via-neutral-700 to-transparent" />
+
+        <div className="space-y-4">
+          <div className="text-center">
+            <span className="text-xs font-bold tracking-[0.25em] text-muted-foreground uppercase">Cabinet IR</span>
+          </div>
+          <IRSelector
+            selectedIR={settings.irIndex}
+            irBypass={settings.irBypass}
+            onIRChange={(v) => onSettingsChange({ irIndex: v })}
+            onBypassChange={(v) => onSettingsChange({ irBypass: v })}
+          />
+        </div>
+
+        <div className="h-px bg-gradient-to-r from-transparent via-neutral-700 to-transparent" />
+
+        <div className="space-y-4">
+          <div className="text-center">
+            <span className="text-xs font-bold tracking-[0.25em] text-muted-foreground uppercase">Routing</span>
+          </div>
+          <RoutingSelector
+            routingMode={settings.routingMode}
+            onChange={(v) => onSettingsChange({ routingMode: v })}
+          />
+        </div>
       </div>
 
-      <div className="text-center border-b border-neutral-700/50 pb-4 pt-4 border-t">
-        <span className="text-lg font-bold tracking-widest text-primary">OUTPUT</span>
-      </div>
-
-      <div className="flex justify-center">
-        <RotaryKnob
-          value={settings.masterVolume}
-          label="MASTER"
-          onChange={(v) => onSettingsChange({ masterVolume: v })}
-          size="lg"
-        />
-      </div>
-
-      <div className="text-center border-b border-neutral-700/50 pb-4 pt-4 border-t">
-        <span className="text-lg font-bold tracking-widest text-primary">CABINET</span>
-      </div>
-
-      <div className="flex flex-col gap-4">
-        <IRSelector
-          selectedIR={settings.irIndex}
-          irBypass={settings.irBypass}
-          onIRChange={(v) => onSettingsChange({ irIndex: v })}
-          onBypassChange={(v) => onSettingsChange({ irBypass: v })}
-        />
-        
-        <RoutingSelector
-          routingMode={settings.routingMode}
-          onChange={(v) => onSettingsChange({ routingMode: v })}
-        />
-      </div>
-
-      <div className="mt-auto pt-4 border-t border-neutral-700/50 text-center">
-        <span className="text-[10px] font-mono text-muted-foreground tracking-widest">
-          DROP A → DROP E
-        </span>
+      <div className="px-4 py-2 bg-neutral-900/60 border-t border-neutral-800 flex items-center justify-center">
+        <span className="text-[9px] font-mono text-muted-foreground tracking-widest">DROP A → DROP E</span>
       </div>
     </div>
   );
