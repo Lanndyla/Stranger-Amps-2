@@ -1,4 +1,4 @@
-import { useEffect, useRef, useCallback } from 'react';
+import { useEffect, useRef, useCallback, useState } from 'react';
 import { SlidersHorizontal } from 'lucide-react';
 import {
   Dialog,
@@ -25,6 +25,7 @@ interface Band {
   q: number;
   color: string;
   label: string;
+  index: number;
 }
 
 function freqToX(freq: number, width: number): number {
@@ -35,6 +36,18 @@ function freqToX(freq: number, width: number): number {
 
 function gainToY(gain: number, height: number): number {
   return height / 2 - (gain / 12) * (height / 2 - 20);
+}
+
+function xToFreq(x: number, width: number): number {
+  const minLog = Math.log10(20);
+  const maxLog = Math.log10(20000);
+  const logFreq = (x / width) * (maxLog - minLog) + minLog;
+  return Math.max(20, Math.min(20000, Math.pow(10, logFreq)));
+}
+
+function yToGain(y: number, height: number): number {
+  const gain = ((height / 2 - y) / (height / 2 - 20)) * 12;
+  return Math.max(-12, Math.min(12, gain));
 }
 
 function calculateBandResponse(freq: number, band: Band): number {
@@ -68,8 +81,108 @@ function calculateBandResponse(freq: number, band: Band): number {
   return 20 * Math.log10(Math.max(0.001, mag));
 }
 
-function EQVisualization({ bands, enabled }: { bands: Band[]; enabled: boolean }) {
+interface EQVisualizationProps {
+  bands: Band[];
+  enabled: boolean;
+  onBandChange: (bandIndex: number, freq: number, gain: number) => void;
+}
+
+function EQVisualization({ bands, enabled, onBandChange }: EQVisualizationProps) {
   const canvasRef = useRef<HTMLCanvasElement>(null);
+  const [draggingBand, setDraggingBand] = useState<number | null>(null);
+  const [hoveredBand, setHoveredBand] = useState<number | null>(null);
+  
+  const getCanvasCoords = useCallback((e: React.MouseEvent<HTMLCanvasElement> | MouseEvent) => {
+    const canvas = canvasRef.current;
+    if (!canvas) return { x: 0, y: 0 };
+    const rect = canvas.getBoundingClientRect();
+    const scaleX = canvas.width / rect.width;
+    const scaleY = canvas.height / rect.height;
+    return {
+      x: (e.clientX - rect.left) * scaleX,
+      y: (e.clientY - rect.top) * scaleY,
+    };
+  }, []);
+  
+  const findBandAtPosition = useCallback((x: number, y: number): number | null => {
+    if (!enabled) return null;
+    const canvas = canvasRef.current;
+    if (!canvas) return null;
+    
+    for (let i = bands.length - 1; i >= 0; i--) {
+      const band = bands[i];
+      const bandX = freqToX(band.freq, canvas.width);
+      let totalGain = 0;
+      bands.forEach(b => {
+        totalGain += calculateBandResponse(band.freq, b);
+      });
+      const bandY = gainToY(totalGain, canvas.height);
+      
+      const dist = Math.sqrt((x - bandX) ** 2 + (y - bandY) ** 2);
+      if (dist <= 12) return i;
+    }
+    return null;
+  }, [bands, enabled]);
+  
+  const handleMouseDown = useCallback((e: React.MouseEvent<HTMLCanvasElement>) => {
+    if (!enabled) return;
+    const { x, y } = getCanvasCoords(e);
+    const bandIndex = findBandAtPosition(x, y);
+    if (bandIndex !== null) {
+      setDraggingBand(bandIndex);
+      e.preventDefault();
+    }
+  }, [enabled, getCanvasCoords, findBandAtPosition]);
+  
+  const handleMouseMove = useCallback((e: React.MouseEvent<HTMLCanvasElement>) => {
+    const canvas = canvasRef.current;
+    if (!canvas) return;
+    
+    const { x, y } = getCanvasCoords(e);
+    
+    if (draggingBand !== null && enabled) {
+      const newFreq = xToFreq(x, canvas.width);
+      const newGain = yToGain(y, canvas.height);
+      onBandChange(draggingBand, newFreq, newGain);
+    } else {
+      const hovered = findBandAtPosition(x, y);
+      setHoveredBand(hovered);
+    }
+  }, [draggingBand, enabled, getCanvasCoords, findBandAtPosition, onBandChange]);
+  
+  const handleMouseUp = useCallback(() => {
+    setDraggingBand(null);
+  }, []);
+  
+  const handleMouseLeave = useCallback(() => {
+    setHoveredBand(null);
+  }, []);
+  
+  useEffect(() => {
+    if (draggingBand !== null) {
+      const handleGlobalMouseMove = (e: MouseEvent) => {
+        const canvas = canvasRef.current;
+        if (!canvas || !enabled) return;
+        
+        const { x, y } = getCanvasCoords(e);
+        const newFreq = xToFreq(x, canvas.width);
+        const newGain = yToGain(y, canvas.height);
+        onBandChange(draggingBand, newFreq, newGain);
+      };
+      
+      const handleGlobalMouseUp = () => {
+        setDraggingBand(null);
+      };
+      
+      window.addEventListener('mousemove', handleGlobalMouseMove);
+      window.addEventListener('mouseup', handleGlobalMouseUp);
+      
+      return () => {
+        window.removeEventListener('mousemove', handleGlobalMouseMove);
+        window.removeEventListener('mouseup', handleGlobalMouseUp);
+      };
+    }
+  }, [draggingBand, enabled, getCanvasCoords, onBandChange]);
   
   const draw = useCallback(() => {
     const canvas = canvasRef.current;
@@ -165,7 +278,7 @@ function EQVisualization({ bands, enabled }: { bands: Band[]; enabled: boolean }
     ctx.stroke();
     
     if (enabled) {
-      bands.forEach(band => {
+      bands.forEach((band, idx) => {
         const x = freqToX(band.freq, width);
         let totalGain = 0;
         bands.forEach(b => {
@@ -173,9 +286,19 @@ function EQVisualization({ bands, enabled }: { bands: Band[]; enabled: boolean }
         });
         const y = gainToY(totalGain, height);
         
+        const isActive = draggingBand === idx || hoveredBand === idx;
+        const radius = isActive ? 10 : 8;
+        
+        if (isActive) {
+          ctx.fillStyle = band.color + '40';
+          ctx.beginPath();
+          ctx.arc(x, y, 16, 0, Math.PI * 2);
+          ctx.fill();
+        }
+        
         ctx.fillStyle = band.color;
         ctx.beginPath();
-        ctx.arc(x, y, 8, 0, Math.PI * 2);
+        ctx.arc(x, y, radius, 0, Math.PI * 2);
         ctx.fill();
         
         ctx.fillStyle = '#fff';
@@ -184,11 +307,13 @@ function EQVisualization({ bands, enabled }: { bands: Band[]; enabled: boolean }
         ctx.fillText(band.label, x, y + 3);
       });
     }
-  }, [bands, enabled]);
+  }, [bands, enabled, draggingBand, hoveredBand]);
   
   useEffect(() => {
     draw();
   }, [draw]);
+  
+  const cursorStyle = enabled && (hoveredBand !== null || draggingBand !== null) ? 'grab' : 'default';
   
   return (
     <canvas
@@ -196,6 +321,11 @@ function EQVisualization({ bands, enabled }: { bands: Band[]; enabled: boolean }
       width={480}
       height={180}
       className="w-full rounded-lg border border-neutral-700"
+      style={{ cursor: draggingBand !== null ? 'grabbing' : cursorStyle }}
+      onMouseDown={handleMouseDown}
+      onMouseMove={handleMouseMove}
+      onMouseUp={handleMouseUp}
+      onMouseLeave={handleMouseLeave}
       data-testid="canvas-peq-visualization"
     />
   );
@@ -203,11 +333,19 @@ function EQVisualization({ bands, enabled }: { bands: Band[]; enabled: boolean }
 
 export function ParametricEQDialog({ settings, onSettingsChange }: ParametricEQDialogProps) {
   const bands: Band[] = [
-    { freq: settings.peqBand1Freq, gain: settings.peqBand1Gain, q: settings.peqBand1Q, color: '#ef4444', label: '1' },
-    { freq: settings.peqBand2Freq, gain: settings.peqBand2Gain, q: settings.peqBand2Q, color: '#eab308', label: '2' },
-    { freq: settings.peqBand3Freq, gain: settings.peqBand3Gain, q: settings.peqBand3Q, color: '#22c55e', label: '3' },
-    { freq: settings.peqBand4Freq, gain: settings.peqBand4Gain, q: settings.peqBand4Q, color: '#3b82f6', label: '4' },
+    { freq: settings.peqBand1Freq, gain: settings.peqBand1Gain, q: settings.peqBand1Q, color: '#ef4444', label: '1', index: 1 },
+    { freq: settings.peqBand2Freq, gain: settings.peqBand2Gain, q: settings.peqBand2Q, color: '#eab308', label: '2', index: 2 },
+    { freq: settings.peqBand3Freq, gain: settings.peqBand3Gain, q: settings.peqBand3Q, color: '#22c55e', label: '3', index: 3 },
+    { freq: settings.peqBand4Freq, gain: settings.peqBand4Gain, q: settings.peqBand4Q, color: '#3b82f6', label: '4', index: 4 },
   ];
+  
+  const handleBandChange = useCallback((bandIndex: number, freq: number, gain: number) => {
+    const bandNum = bandIndex + 1;
+    onSettingsChange({
+      [`peqBand${bandNum}Freq`]: freq,
+      [`peqBand${bandNum}Gain`]: gain,
+    });
+  }, [onSettingsChange]);
   
   const formatFreq = (freq: number) => {
     if (freq >= 1000) {
@@ -253,7 +391,7 @@ export function ParametricEQDialog({ settings, onSettingsChange }: ParametricEQD
             />
           </div>
           
-          <EQVisualization bands={bands} enabled={settings.peqEnabled} />
+          <EQVisualization bands={bands} enabled={settings.peqEnabled} onBandChange={handleBandChange} />
           
           <div className="grid grid-cols-4 gap-3">
             {[1, 2, 3, 4].map((bandNum) => {
