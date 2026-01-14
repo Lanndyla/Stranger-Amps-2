@@ -12,12 +12,12 @@ import { RotaryKnob } from './RotaryKnob';
 import { ToggleSwitch } from './ToggleSwitch';
 import type { AmpSettings } from '@shared/schema';
 
-interface ThallFeaturesDialogProps {
+interface SpecialFXDialogProps {
   settings: AmpSettings;
   onSettingsChange: (settings: Partial<AmpSettings>) => void;
 }
 
-export function ThallFeaturesDialog({ settings, onSettingsChange }: ThallFeaturesDialogProps) {
+export function SpecialFXDialog({ settings, onSettingsChange }: SpecialFXDialogProps) {
   const hasActiveFeature = settings.thickenEnabled || settings.chugEnabled || settings.lofi || settings.cleanse;
 
   return (
@@ -27,10 +27,10 @@ export function ThallFeaturesDialog({ settings, onSettingsChange }: ThallFeature
           variant={hasActiveFeature ? "default" : "outline"}
           size="sm"
           className="h-8 gap-1.5 font-mono text-xs"
-          data-testid="button-thall-features"
+          data-testid="button-special-fx"
         >
           <Layers className="w-3.5 h-3.5" />
-          <span>THALL</span>
+          <span>SPECIAL FX</span>
           {hasActiveFeature && (
             <span className="w-1.5 h-1.5 rounded-full bg-orange-400" style={{ boxShadow: '0 0 8px 2px rgba(251, 146, 60, 0.6)' }} />
           )}
@@ -40,7 +40,7 @@ export function ThallFeaturesDialog({ settings, onSettingsChange }: ThallFeature
         <DialogHeader>
           <DialogTitle className="text-lg font-bold tracking-wider text-orange-400 flex items-center gap-2">
             <Layers className="w-5 h-5" />
-            THALL FEATURES
+            SPECIAL FX
           </DialogTitle>
           <DialogDescription className="sr-only">
             Advanced tone shaping features for ultra-heavy tones

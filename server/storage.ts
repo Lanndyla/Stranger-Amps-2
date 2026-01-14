@@ -69,7 +69,7 @@ export class MemStorage implements IStorage {
         isFactory: true,
       },
       {
-        name: 'THALL DESTROYER',
+        name: 'BRUTAL DESTROYER',
         settings: {
           ...defaultAmpSettings,
           inputGain: 8,

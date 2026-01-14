@@ -9,7 +9,7 @@ import { PresetSelector } from '@/components/amp/PresetSelector';
 import { AudioDeviceSelector } from '@/components/amp/AudioDeviceSelector';
 import { ReverbDialog } from '@/components/amp/ReverbDialog';
 import { AIEnhanceDialog } from '@/components/amp/AIEnhanceDialog';
-import { ThallFeaturesDialog } from '@/components/amp/ThallFeaturesDialog';
+import { SpecialFXDialog } from '@/components/amp/ThallFeaturesDialog';
 import { PitchDialog } from '@/components/amp/PitchDialog';
 import { TunerDialog } from '@/components/amp/TunerDialog';
 import { ParametricEQDialog } from '@/components/amp/ParametricEQDialog';
@@ -362,7 +362,7 @@ export default function AmpSimulator() {
 
       <footer className="flex-shrink-0 px-4 py-2 border-t border-border bg-card/50 flex items-center justify-between gap-4">
         <div className="flex items-center gap-2 flex-wrap">
-          <ThallFeaturesDialog settings={settings} onSettingsChange={handleSettingsChange} />
+          <SpecialFXDialog settings={settings} onSettingsChange={handleSettingsChange} />
           <PitchDialog settings={settings} onSettingsChange={handleSettingsChange} />
           <ReverbDialog settings={settings} onSettingsChange={handleSettingsChange} />
           <AIEnhanceDialog 
