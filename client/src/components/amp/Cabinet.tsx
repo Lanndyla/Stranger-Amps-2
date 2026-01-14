@@ -14,9 +14,30 @@ export function Cabinet({ irName = 'Default IR', isActive = true }: CabinetProps
       <div className="cabinet-body tolex-texture rounded-b-lg border border-t-0 border-neutral-700 overflow-hidden h-full flex flex-col">
         <div className="flex-1 p-3 min-h-0">
           <div 
-            className="cabinet-grill rounded-lg border border-neutral-800/50 overflow-hidden h-full"
+            className="cabinet-grill rounded-lg border border-neutral-800/50 overflow-hidden h-full relative"
           >
-            <div className="grid grid-cols-2 grid-rows-2 gap-2 h-full p-3 place-items-center">
+            <div 
+              className="absolute inset-0 pointer-events-none z-10"
+              style={{
+                backgroundImage: `
+                  repeating-linear-gradient(
+                    0deg,
+                    transparent,
+                    transparent 2px,
+                    rgba(0,0,0,0.4) 2px,
+                    rgba(0,0,0,0.4) 4px
+                  ),
+                  repeating-linear-gradient(
+                    90deg,
+                    transparent,
+                    transparent 2px,
+                    rgba(0,0,0,0.2) 2px,
+                    rgba(0,0,0,0.2) 4px
+                  )
+                `,
+              }}
+            />
+            <div className="grid grid-cols-2 grid-rows-2 gap-2 h-full p-3 place-items-center relative z-0">
               {[1, 2, 3, 4].map((speaker) => (
                 <div
                   key={speaker}
