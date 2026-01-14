@@ -194,6 +194,9 @@ export default function AmpSimulator() {
   }, []);
 
   const currentIR = builtInIRs[settings.irIndex];
+  const displayIRName = settings.customIRLoaded && settings.customIRName 
+    ? settings.customIRName 
+    : currentIR?.name;
 
   return (
     <div 
@@ -351,9 +354,9 @@ export default function AmpSimulator() {
         <div className="flex flex-col flex-1 max-w-2xl min-w-0">
           <AmpHeadDisplay isClipping={isClipping} />
           <Cabinet 
-            irName={settings.irBypass ? 'BYPASSED' : currentIR?.name} 
+            irName={settings.irBypass ? 'BYPASSED' : displayIRName} 
             isActive={!settings.irBypass}
-            irIndex={settings.irIndex}
+            irIndex={settings.customIRLoaded ? -1 : settings.irIndex}
           />
         </div>
 
@@ -361,6 +364,15 @@ export default function AmpSimulator() {
           <RightControlPanel
             settings={settings}
             onSettingsChange={handleSettingsChange}
+            onLoadCustomIR={async (file) => {
+              const result = await audioEngine.loadCustomIR(file);
+              if (result.success) {
+                handleSettingsChange({
+                  customIRName: result.name,
+                  customIRLoaded: true,
+                });
+              }
+            }}
           />
         </div>
       </main>

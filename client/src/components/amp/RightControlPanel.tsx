@@ -7,11 +7,13 @@ import type { AmpSettings } from '@shared/schema';
 interface RightControlPanelProps {
   settings: AmpSettings;
   onSettingsChange: (settings: Partial<AmpSettings>) => void;
+  onLoadCustomIR?: (file: File) => void;
 }
 
 export function RightControlPanel({
   settings,
   onSettingsChange,
+  onLoadCustomIR,
 }: RightControlPanelProps) {
   return (
     <div 
@@ -65,8 +67,11 @@ export function RightControlPanel({
           <IRSelector
             selectedIR={settings.irIndex}
             irBypass={settings.irBypass}
-            onIRChange={(v) => onSettingsChange({ irIndex: v })}
+            customIRName={settings.customIRName}
+            customIRLoaded={settings.customIRLoaded}
+            onIRChange={(v) => onSettingsChange({ irIndex: v, customIRLoaded: false })}
             onBypassChange={(v) => onSettingsChange({ irBypass: v })}
+            onLoadCustomIR={onLoadCustomIR}
           />
         </div>
 

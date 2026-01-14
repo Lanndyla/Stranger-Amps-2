@@ -45,6 +45,8 @@ class AudioEngine {
   private currentMasterVolume = 5;
   private currentSettings: AmpSettings | null = null;
   private audioMode: AudioMode = 'worklet';
+  private customIRBuffer: AudioBuffer | null = null;
+  private customIRConvolver: ConvolverNode | null = null;
   
   private websocket: WebSocket | null = null;
   private nativeBridgeUrl: string = 'ws://localhost:9876';
@@ -587,6 +589,39 @@ class AudioEngine {
       }
     }
     return curve;
+  }
+
+  async loadCustomIR(file: File): Promise<{ success: boolean; name: string }> {
+    try {
+      if (!this.audioContext) {
+        this.audioContext = new AudioContext({ sampleRate: 48000 });
+      }
+
+      const arrayBuffer = await file.arrayBuffer();
+      this.customIRBuffer = await this.audioContext.decodeAudioData(arrayBuffer);
+      
+      if (this.customIRConvolver) {
+        this.customIRConvolver.disconnect();
+      }
+      this.customIRConvolver = this.audioContext.createConvolver();
+      this.customIRConvolver.buffer = this.customIRBuffer;
+
+      const name = file.name.replace(/\.wav$/i, '').toUpperCase();
+      console.log('Custom IR loaded:', name);
+      
+      return { success: true, name };
+    } catch (error) {
+      console.error('Failed to load custom IR:', error);
+      return { success: false, name: '' };
+    }
+  }
+
+  hasCustomIR(): boolean {
+    return this.customIRBuffer !== null;
+  }
+
+  getCustomIRConvolver(): ConvolverNode | null {
+    return this.customIRConvolver;
   }
 }
 

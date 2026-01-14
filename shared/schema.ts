@@ -46,6 +46,8 @@ export const ampSettingsSchema = z.object({
   // IR Section
   irIndex: z.number().min(0).default(0),
   irBypass: z.boolean().default(false),
+  customIRName: z.string().default(''),
+  customIRLoaded: z.boolean().default(false),
   
   // Routing
   routingMode: z.enum(['direct', 'fxloop', 'live']).default('direct'),
@@ -136,6 +138,8 @@ export const defaultAmpSettings: AmpSettings = {
   reverbEnabled: false,
   irIndex: 0,
   irBypass: false,
+  customIRName: '',
+  customIRLoaded: false,
   routingMode: 'direct',
   aiEnhance: false,
   aiTuning: 'dropA',

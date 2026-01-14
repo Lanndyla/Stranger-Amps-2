@@ -14,6 +14,7 @@ const cabinetColors: Record<number, {
   speakerInner: string;
   accent: string;
 }> = {
+  [-1]: { tolex: '#0a1a1a', grillDark: '#081414', grillLight: '#0c1c1c', speakerOuter: '#061010', speakerInner: '#040c0c', accent: '#22d3ee' },
   0: { tolex: '#1a1a1a', grillDark: '#0d0d12', grillLight: '#1a1a22', speakerOuter: '#0a0a0e', speakerInner: '#080810', accent: '#3b82f6' },
   1: { tolex: '#1c1c1c', grillDark: '#1a1610', grillLight: '#262015', speakerOuter: '#141210', speakerInner: '#0e0c0a', accent: '#f5f5dc' },
   2: { tolex: '#0a0a0a', grillDark: '#101010', grillLight: '#1a1a1a', speakerOuter: '#0c0c0c', speakerInner: '#080808', accent: '#ef4444' },

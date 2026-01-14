@@ -1,3 +1,4 @@
+import { useRef } from 'react';
 import { builtInIRs } from '@shared/schema';
 import {
   Select,
@@ -7,20 +8,44 @@ import {
   SelectValue,
 } from '@/components/ui/select';
 import { ToggleSwitch } from './ToggleSwitch';
+import { Button } from '@/components/ui/button';
+import { Upload } from 'lucide-react';
 
 interface IRSelectorProps {
   selectedIR: number;
   irBypass: boolean;
+  customIRName?: string;
+  customIRLoaded?: boolean;
   onIRChange: (index: number) => void;
   onBypassChange: (bypass: boolean) => void;
+  onLoadCustomIR?: (file: File) => void;
 }
 
 export function IRSelector({
   selectedIR,
   irBypass,
+  customIRName,
+  customIRLoaded,
   onIRChange,
   onBypassChange,
+  onLoadCustomIR,
 }: IRSelectorProps) {
+  const fileInputRef = useRef<HTMLInputElement>(null);
+
+  const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (file && onLoadCustomIR) {
+      onLoadCustomIR(file);
+    }
+    if (fileInputRef.current) {
+      fileInputRef.current.value = '';
+    }
+  };
+
+  const handleLoadClick = () => {
+    fileInputRef.current?.click();
+  };
+
   return (
     <div className="flex flex-col gap-3" data-testid="ir-selector">
       <div className="text-center">
@@ -30,8 +55,12 @@ export function IRSelector({
       </div>
       
       <Select
-        value={selectedIR.toString()}
-        onValueChange={(val) => onIRChange(parseInt(val, 10))}
+        value={customIRLoaded ? 'custom' : selectedIR.toString()}
+        onValueChange={(val) => {
+          if (val !== 'custom') {
+            onIRChange(parseInt(val, 10));
+          }
+        }}
         disabled={irBypass}
       >
         <SelectTrigger 
@@ -50,10 +79,18 @@ export function IRSelector({
               {ir.name}
             </SelectItem>
           ))}
+          {customIRLoaded && customIRName && (
+            <SelectItem 
+              value="custom"
+              className="font-mono text-xs text-blue-400"
+            >
+              {customIRName}
+            </SelectItem>
+          )}
         </SelectContent>
       </Select>
       
-      <div className="flex justify-center">
+      <div className="flex items-center justify-center gap-2">
         <ToggleSwitch
           isOn={irBypass}
           label="BYPASS"
@@ -61,6 +98,24 @@ export function IRSelector({
           variant="boost"
           size="sm"
         />
+        <input
+          ref={fileInputRef}
+          type="file"
+          accept=".wav,.WAV"
+          onChange={handleFileChange}
+          className="hidden"
+          data-testid="ir-file-input"
+        />
+        <Button
+          size="sm"
+          variant="outline"
+          onClick={handleLoadClick}
+          className="h-7 px-2 text-[10px] font-bold uppercase tracking-wider bg-neutral-800 border-neutral-600 hover:bg-neutral-700"
+          data-testid="button-load-ir"
+        >
+          <Upload className="w-3 h-3 mr-1" />
+          Load IR
+        </Button>
       </div>
     </div>
   );
