@@ -353,6 +353,7 @@ export default function AmpSimulator() {
           <Cabinet 
             irName={settings.irBypass ? 'BYPASSED' : currentIR?.name} 
             isActive={!settings.irBypass}
+            irIndex={settings.irIndex}
           />
         </div>
 
