@@ -20,9 +20,14 @@ class AmpProcessor extends AudioWorkletProcessor {
     this.lofiEnabled = false;
     this.cleanseEnabled = false;
     
-    this.thickenBuffers = [new Float32Array(4096), new Float32Array(4096)];
-    this.thickenIndices = [0, 0];
-    this.thickenPhase = [0, 0];
+    this.thickenLastSample = [0, 0];
+    this.thickenPeriodHistory = [[0,0,0,0], [0,0,0,0]];
+    this.thickenPeriodIdx = [0, 0];
+    this.thickenPeriod = [0, 0];
+    this.thickenSampleCount = [0, 0];
+    this.thickenOscPhase = [0, 0];
+    this.thickenEnvelope = [0, 0];
+    this.thickenSubGain = [0, 0];
     this.envelopeFollowers = [0, 0];
     
     this.lofiLpState = [{ x1: 0, x2: 0, y1: 0, y2: 0 }, { x1: 0, x2: 0, y1: 0, y2: 0 }];
@@ -219,16 +224,57 @@ class AmpProcessor extends AudioWorkletProcessor {
         let sample = inputChannel[i] * this.inputLevel * this.inputGain;
         
         if (this.thickenEnabled && this.thickenAmount > 0) {
-          const buffer = this.thickenBuffers[channel] || this.thickenBuffers[0];
-          const idx = this.thickenIndices[channel] || 0;
-          buffer[idx] = sample;
+          const lastSample = this.thickenLastSample[channel];
+          this.thickenLastSample[channel] = sample;
+          this.thickenSampleCount[channel]++;
           
-          const phase = this.thickenPhase[channel] || 0;
-          const subOctave = sample * Math.sin(phase);
-          this.thickenPhase[channel] = (phase + Math.PI / 24) % (Math.PI * 2);
+          if (lastSample <= 0 && sample > 0) {
+            const period = this.thickenSampleCount[channel];
+            if (period > 40 && period < 1500) {
+              const hist = this.thickenPeriodHistory[channel];
+              const currPeriod = this.thickenPeriod[channel];
+              
+              if (currPeriod > 0 && Math.abs(period - currPeriod) > currPeriod * 0.15) {
+                hist[0] = hist[1] = hist[2] = hist[3] = 0;
+                this.thickenPeriodIdx[channel] = 0;
+                this.thickenPeriod[channel] = 0;
+                this.thickenSubGain[channel] = 0;
+                this.thickenOscPhase[channel] = 0;
+              }
+              
+              const idx = this.thickenPeriodIdx[channel];
+              hist[idx] = period;
+              this.thickenPeriodIdx[channel] = (idx + 1) % 4;
+              
+              const validPeriods = hist.filter(p => p > 0);
+              if (validPeriods.length >= 4) {
+                const avg = validPeriods.reduce((a,b) => a+b, 0) / validPeriods.length;
+                const maxDev = Math.max(...validPeriods.map(p => Math.abs(p - avg)));
+                if (maxDev < avg * 0.15) {
+                  this.thickenPeriod[channel] = avg;
+                }
+              }
+            }
+            this.thickenSampleCount[channel] = 0;
+          }
           
-          sample = sample + subOctave * this.thickenAmount * 0.6;
-          this.thickenIndices[channel] = (idx + 1) % 4096;
+          const env = Math.abs(sample);
+          this.thickenEnvelope[channel] = this.thickenEnvelope[channel] * 0.995 + env * 0.005;
+          
+          const period = this.thickenPeriod[channel];
+          const hasLock = period > 0 && this.thickenEnvelope[channel] > 0.01;
+          
+          if (hasLock) {
+            const subPeriod = period * 2;
+            const phaseInc = (2 * Math.PI) / subPeriod;
+            this.thickenOscPhase[channel] = (this.thickenOscPhase[channel] + phaseInc) % (2 * Math.PI);
+            this.thickenSubGain[channel] = Math.min(1, this.thickenSubGain[channel] + 0.0003);
+          } else {
+            this.thickenSubGain[channel] = Math.max(0, this.thickenSubGain[channel] - 0.01);
+          }
+          
+          const subOctave = Math.sin(this.thickenOscPhase[channel]) * this.thickenEnvelope[channel] * this.thickenSubGain[channel];
+          sample = sample + subOctave * this.thickenAmount * 2.5;
         }
         
         if (this.chugEnabled && this.chugAmount > 0) {
