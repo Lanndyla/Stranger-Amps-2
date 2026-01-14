@@ -41,7 +41,7 @@ export function Cabinet({ irName = 'Default IR', isActive = true }: CabinetProps
               {[1, 2, 3, 4].map((speaker) => (
                 <div
                   key={speaker}
-                  className="relative rounded-full flex items-center justify-center overflow-hidden aspect-square w-[95%] max-w-[160px]"
+                  className="relative rounded-full flex items-center justify-center overflow-hidden aspect-square w-full max-w-[200px]"
                   style={{
                     background: `
                       radial-gradient(circle at 50% 50%, 
