@@ -24,45 +24,62 @@ export function LeftControlPanel({
         <span className="text-sm font-bold tracking-[0.3em] text-primary uppercase">INPUT / EQ</span>
       </div>
 
-      <div className="flex-1 flex flex-col gap-8 p-5">
-        <div className="flex items-center justify-center gap-6">
+      <div className="flex-1 flex flex-col gap-5 p-4">
+        <div className="flex items-center justify-center gap-4">
+          <RotaryKnob
+            value={settings.inputLevel}
+            label="INPUT"
+            onChange={(v) => onSettingsChange({ inputLevel: v })}
+            size="sm"
+          />
           <RotaryKnob
             value={settings.inputGain}
             label="GAIN"
             onChange={(v) => onSettingsChange({ inputGain: v })}
-            size="lg"
+            size="md"
           />
-          <div className="flex flex-col items-center gap-2">
+          <div className="flex flex-col items-center gap-1">
             <GainMeter level={inputLevel} isClipping={isClipping} />
-            <span className="text-[10px] font-mono text-muted-foreground uppercase tracking-wider">Level</span>
+            <span className="text-[9px] font-mono text-muted-foreground uppercase tracking-wider">LVL</span>
           </div>
         </div>
 
         <div className="h-px bg-gradient-to-r from-transparent via-neutral-700 to-transparent" />
 
-        <div className="grid grid-cols-2 gap-5 place-items-center">
+        <div className="grid grid-cols-2 gap-4 place-items-center">
           <RotaryKnob
             value={settings.bass}
             label="BASS"
             onChange={(v) => onSettingsChange({ bass: v })}
-            size="md"
+            size="sm"
           />
           <RotaryKnob
             value={settings.mid}
             label="MID"
             onChange={(v) => onSettingsChange({ mid: v })}
-            size="md"
+            size="sm"
           />
           <RotaryKnob
             value={settings.treble}
             label="TREBLE"
             onChange={(v) => onSettingsChange({ treble: v })}
-            size="md"
+            size="sm"
           />
           <RotaryKnob
             value={settings.presence}
             label="PRESENCE"
             onChange={(v) => onSettingsChange({ presence: v })}
+            size="sm"
+          />
+        </div>
+
+        <div className="h-px bg-gradient-to-r from-transparent via-neutral-700 to-transparent" />
+
+        <div className="flex items-center justify-center">
+          <RotaryKnob
+            value={settings.outputLevel}
+            label="OUTPUT"
+            onChange={(v) => onSettingsChange({ outputLevel: v })}
             size="md"
           />
         </div>

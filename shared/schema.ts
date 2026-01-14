@@ -6,6 +6,7 @@ import { z } from "zod";
 // Amp Settings Schema
 export const ampSettingsSchema = z.object({
   // Input Section
+  inputLevel: z.number().min(0).max(10).default(5),
   inputGain: z.number().min(0).max(10).default(5),
   
   // EQ Section
@@ -22,6 +23,13 @@ export const ampSettingsSchema = z.object({
   
   // Output Section
   masterVolume: z.number().min(0).max(10).default(5),
+  outputLevel: z.number().min(0).max(10).default(5),
+  
+  // Reverb Section
+  reverbType: z.enum(['hall', 'room', 'plate', 'spring', 'ambient', 'shimmer']).default('room'),
+  reverbMix: z.number().min(0).max(10).default(2),
+  reverbDecay: z.number().min(0).max(10).default(5),
+  reverbEnabled: z.boolean().default(false),
   
   // IR Section
   irIndex: z.number().min(0).default(0),
@@ -29,6 +37,10 @@ export const ampSettingsSchema = z.object({
   
   // Routing
   routingMode: z.enum(['direct', 'fxloop', 'live']).default('direct'),
+  
+  // AI Enhancement
+  aiEnhance: z.boolean().default(false),
+  aiTuning: z.enum(['dropA', 'dropB', 'dropC', 'dropD', 'dropE']).default('dropA'),
 });
 
 export type AmpSettings = z.infer<typeof ampSettingsSchema>;
@@ -64,6 +76,7 @@ export const builtInIRs = [
 
 // Default amp settings
 export const defaultAmpSettings: AmpSettings = {
+  inputLevel: 5,
   inputGain: 5,
   bass: 6,
   mid: 4,
@@ -74,9 +87,16 @@ export const defaultAmpSettings: AmpSettings = {
   plus10db: false,
   plusLow: false,
   masterVolume: 5,
+  outputLevel: 5,
+  reverbType: 'room',
+  reverbMix: 2,
+  reverbDecay: 5,
+  reverbEnabled: false,
   irIndex: 0,
   irBypass: false,
   routingMode: 'direct',
+  aiEnhance: false,
+  aiTuning: 'dropA',
 };
 
 // Users table (keep existing)

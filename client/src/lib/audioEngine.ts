@@ -19,12 +19,17 @@ class AudioEngine {
   private inputNode: MediaStreamAudioSourceNode | null = null;
   private gainNode: GainNode | null = null;
   private inputGainNode: GainNode | null = null;
+  private inputLevelNode: GainNode | null = null;
+  private outputLevelNode: GainNode | null = null;
   private bassFilter: BiquadFilterNode | null = null;
   private midFilter: BiquadFilterNode | null = null;
   private trebleFilter: BiquadFilterNode | null = null;
   private presenceFilter: BiquadFilterNode | null = null;
   private distortionNode: WaveShaperNode | null = null;
   private lowBoostFilter: BiquadFilterNode | null = null;
+  private reverbNode: ConvolverNode | null = null;
+  private reverbGainNode: GainNode | null = null;
+  private dryGainNode: GainNode | null = null;
   private analyserNode: AnalyserNode | null = null;
   private workletNode: AudioWorkletNode | null = null;
   private isConnected = false;
@@ -129,6 +134,9 @@ class AudioEngine {
   private async setupStandardProcessing(): Promise<void> {
     if (!this.audioContext || !this.inputNode) return;
 
+    this.inputLevelNode = this.audioContext.createGain();
+    this.inputLevelNode.gain.value = 0.75;
+
     this.inputGainNode = this.audioContext.createGain();
     this.inputGainNode.gain.value = 1;
 
@@ -165,7 +173,20 @@ class AudioEngine {
     this.gainNode = this.audioContext.createGain();
     this.gainNode.gain.value = 0.5;
 
-    this.inputNode.connect(this.inputGainNode);
+    this.outputLevelNode = this.audioContext.createGain();
+    this.outputLevelNode.gain.value = 0.75;
+
+    this.dryGainNode = this.audioContext.createGain();
+    this.dryGainNode.gain.value = 1;
+
+    this.reverbGainNode = this.audioContext.createGain();
+    this.reverbGainNode.gain.value = 0;
+
+    this.reverbNode = this.audioContext.createConvolver();
+    this.reverbNode.buffer = this.createReverbImpulse(2.0, 3.0);
+
+    this.inputNode.connect(this.inputLevelNode);
+    this.inputLevelNode.connect(this.inputGainNode);
     this.inputGainNode.connect(this.distortionNode);
     this.distortionNode.connect(this.lowBoostFilter);
     this.lowBoostFilter.connect(this.bassFilter);
@@ -173,10 +194,49 @@ class AudioEngine {
     this.midFilter.connect(this.trebleFilter);
     this.trebleFilter.connect(this.presenceFilter);
     this.presenceFilter.connect(this.gainNode);
-    this.gainNode.connect(this.analyserNode!);
+    this.gainNode.connect(this.outputLevelNode);
+    this.outputLevelNode.connect(this.dryGainNode);
+    this.outputLevelNode.connect(this.reverbNode);
+    this.reverbNode.connect(this.reverbGainNode);
+    this.dryGainNode.connect(this.analyserNode!);
+    this.reverbGainNode.connect(this.analyserNode!);
     this.analyserNode!.connect(this.audioContext.destination);
     
     console.log('Standard Web Audio processing initialized');
+  }
+
+  private createReverbImpulse(decay: number, duration: number): AudioBuffer {
+    if (!this.audioContext) throw new Error('AudioContext not initialized');
+    const sampleRate = this.audioContext.sampleRate;
+    const length = sampleRate * duration;
+    const buffer = this.audioContext.createBuffer(2, length, sampleRate);
+    
+    for (let channel = 0; channel < 2; channel++) {
+      const channelData = buffer.getChannelData(channel);
+      for (let i = 0; i < length; i++) {
+        const t = i / sampleRate;
+        const envelope = Math.exp(-t * decay);
+        channelData[i] = (Math.random() * 2 - 1) * envelope;
+      }
+    }
+    return buffer;
+  }
+
+  private updateReverbType(type: string, decay: number): void {
+    if (!this.audioContext || !this.reverbNode) return;
+    
+    const typeParams: Record<string, { decay: number; duration: number }> = {
+      hall: { decay: 1.5, duration: 4.0 },
+      room: { decay: 3.0, duration: 2.0 },
+      plate: { decay: 2.5, duration: 2.5 },
+      spring: { decay: 4.0, duration: 1.5 },
+      ambient: { decay: 1.0, duration: 5.0 },
+      shimmer: { decay: 0.8, duration: 6.0 },
+    };
+    
+    const params = typeParams[type] || typeParams.room;
+    const adjustedDecay = params.decay * (1 - (decay - 5) * 0.1);
+    this.reverbNode.buffer = this.createReverbImpulse(adjustedDecay, params.duration);
   }
 
   async disconnect(): Promise<void> {
@@ -196,6 +256,7 @@ class AudioEngine {
     }
 
     this.inputNode = null;
+    this.inputLevelNode = null;
     this.inputGainNode = null;
     this.bassFilter = null;
     this.midFilter = null;
@@ -204,6 +265,10 @@ class AudioEngine {
     this.distortionNode = null;
     this.lowBoostFilter = null;
     this.gainNode = null;
+    this.outputLevelNode = null;
+    this.dryGainNode = null;
+    this.reverbGainNode = null;
+    this.reverbNode = null;
     this.analyserNode = null;
     this.isConnected = false;
   }
@@ -224,6 +289,11 @@ class AudioEngine {
         data: settings,
       });
       return;
+    }
+
+    if (this.inputLevelNode) {
+      const inputLevel = ((settings.inputLevel ?? 5) / 10) * 1.5;
+      this.inputLevelNode.gain.setTargetAtTime(inputLevel, this.audioContext!.currentTime, 0.01);
     }
 
     if (this.inputGainNode) {
@@ -270,6 +340,23 @@ class AudioEngine {
     if (this.gainNode) {
       const masterVolume = this.isMuted ? 0 : (settings.masterVolume / 10);
       this.gainNode.gain.setTargetAtTime(masterVolume, this.audioContext!.currentTime, 0.01);
+    }
+
+    if (this.outputLevelNode) {
+      const outputLevel = ((settings.outputLevel ?? 5) / 10) * 1.5;
+      this.outputLevelNode.gain.setTargetAtTime(outputLevel, this.audioContext!.currentTime, 0.01);
+    }
+
+    if (this.reverbGainNode && this.dryGainNode) {
+      const reverbEnabled = settings.reverbEnabled ?? false;
+      const reverbMix = reverbEnabled ? ((settings.reverbMix ?? 2) / 10) : 0;
+      const dryMix = reverbEnabled ? (1 - reverbMix * 0.5) : 1;
+      this.reverbGainNode.gain.setTargetAtTime(reverbMix, this.audioContext!.currentTime, 0.01);
+      this.dryGainNode.gain.setTargetAtTime(dryMix, this.audioContext!.currentTime, 0.01);
+      
+      if (reverbEnabled && this.reverbNode) {
+        this.updateReverbType(settings.reverbType ?? 'room', settings.reverbDecay ?? 5);
+      }
     }
   }
 

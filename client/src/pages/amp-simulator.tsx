@@ -7,6 +7,8 @@ import { LeftControlPanel } from '@/components/amp/LeftControlPanel';
 import { RightControlPanel } from '@/components/amp/RightControlPanel';
 import { PresetSelector } from '@/components/amp/PresetSelector';
 import { AudioDeviceSelector } from '@/components/amp/AudioDeviceSelector';
+import { ReverbDialog } from '@/components/amp/ReverbDialog';
+import { AIEnhanceDialog } from '@/components/amp/AIEnhanceDialog';
 import { Button } from '@/components/ui/button';
 import {
   Sheet,
@@ -34,6 +36,7 @@ export default function AmpSimulator() {
   const [isClipping, setIsClipping] = useState(false);
   const [isMuted, setIsMuted] = useState(false);
   const [isAudioConnected, setIsAudioConnected] = useState(false);
+  const [isOptimizing, setIsOptimizing] = useState(false);
   const animationRef = useRef<number>();
 
   const { data: presets = [], isLoading: presetsLoading } = useQuery<Preset[]>({
@@ -96,8 +99,9 @@ export default function AmpSimulator() {
 
   const handlePresetChange = useCallback((preset: Preset) => {
     setCurrentPreset(preset);
-    setSettings(preset.settings);
-    audioEngine.updateSettings(preset.settings);
+    const mergedSettings = { ...defaultAmpSettings, ...preset.settings };
+    setSettings(mergedSettings);
+    audioEngine.updateSettings(mergedSettings);
   }, []);
 
   const handleMuteToggle = useCallback(() => {
@@ -122,6 +126,29 @@ export default function AmpSimulator() {
       });
     }
   }, [settings, isMuted, toast]);
+
+  const handleAIOptimize = useCallback(async () => {
+    setIsOptimizing(true);
+    
+    const tuningPresets: Record<string, Partial<AmpSettings>> = {
+      dropA: { bass: 4, mid: 5, treble: 7, presence: 7, drive: 7, inputGain: 6 },
+      dropB: { bass: 4, mid: 4, treble: 7, presence: 6, drive: 8, inputGain: 6 },
+      dropC: { bass: 5, mid: 4, treble: 7, presence: 6, drive: 7, inputGain: 5 },
+      dropD: { bass: 5, mid: 5, treble: 6, presence: 5, drive: 6, inputGain: 5 },
+      dropE: { bass: 3, mid: 5, treble: 8, presence: 8, drive: 8, inputGain: 7 },
+    };
+
+    await new Promise(resolve => setTimeout(resolve, 1500));
+    
+    const optimizedSettings = tuningPresets[settings.aiTuning] || tuningPresets.dropA;
+    handleSettingsChange({ ...optimizedSettings, aiEnhance: true });
+    
+    setIsOptimizing(false);
+    toast({
+      title: 'Tone Optimized',
+      description: `Settings adjusted for ${settings.aiTuning.replace('drop', 'Drop ')} tuning.`,
+    });
+  }, [settings.aiTuning, handleSettingsChange, toast]);
 
   useEffect(() => {
     const updateLevel = () => {
@@ -329,12 +356,22 @@ export default function AmpSimulator() {
         </div>
       </main>
 
-      <footer className="flex-shrink-0 px-4 py-2 border-t border-border bg-card/50 text-center">
+      <footer className="flex-shrink-0 px-4 py-2 border-t border-border bg-card/50 flex items-center justify-between gap-4">
+        <div className="flex items-center gap-2">
+          <ReverbDialog settings={settings} onSettingsChange={handleSettingsChange} />
+          <AIEnhanceDialog 
+            settings={settings} 
+            onSettingsChange={handleSettingsChange}
+            onOptimize={handleAIOptimize}
+            isOptimizing={isOptimizing}
+          />
+        </div>
         <span className="text-xs text-muted-foreground font-mono">
           {isAudioConnected 
             ? 'Audio connected — play your guitar through the amp!' 
             : 'Connect your audio interface to start playing'}
         </span>
+        <div className="w-32" />
       </footer>
     </div>
   );

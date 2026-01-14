@@ -54,12 +54,12 @@ export function IRSelector({
       </Select>
       
       <div className="flex justify-center">
-        
         <ToggleSwitch
           isOn={irBypass}
           label="BYPASS"
           onChange={onBypassChange}
           variant="boost"
+          size="sm"
         />
       </div>
     </div>

@@ -1,6 +1,7 @@
 class AmpProcessor extends AudioWorkletProcessor {
   constructor() {
     super();
+    this.inputLevel = 0.75;
     this.inputGain = 1.0;
     this.bassGain = 0;
     this.midGain = 0;
@@ -9,6 +10,7 @@ class AmpProcessor extends AudioWorkletProcessor {
     this.driveAmount = 50;
     this.lowBoost = false;
     this.masterVolume = 0.5;
+    this.outputLevel = 0.75;
     this.isMuted = false;
     
     this.channelStates = [];
@@ -32,6 +34,7 @@ class AmpProcessor extends AudioWorkletProcessor {
     this.port.onmessage = (event) => {
       const { type, data } = event.data;
       if (type === 'updateSettings') {
+        this.inputLevel = ((data.inputLevel ?? 5) / 10) * 1.5;
         this.inputGain = (data.inputGain / 10) * 2;
         this.bassGain = ((data.bass - 5) / 5) * 12;
         this.midGain = ((data.mid - 5) / 5) * 12;
@@ -45,6 +48,7 @@ class AmpProcessor extends AudioWorkletProcessor {
         
         this.lowBoost = data.plusLow;
         this.masterVolume = data.masterVolume / 10;
+        this.outputLevel = ((data.outputLevel ?? 5) / 10) * 1.5;
         this.updateCoefficients();
       } else if (type === 'setMuted') {
         this.isMuted = data;
@@ -137,7 +141,7 @@ class AmpProcessor extends AudioWorkletProcessor {
       const chState = this.channelStates[channel] || this.channelStates[0];
       
       for (let i = 0; i < outputChannel.length; i++) {
-        let sample = inputChannel[i] * this.inputGain;
+        let sample = inputChannel[i] * this.inputLevel * this.inputGain;
         
         sample = this.applyDistortion(sample, this.driveAmount);
         
@@ -151,7 +155,7 @@ class AmpProcessor extends AudioWorkletProcessor {
         sample = this.applyBiquadFilter(sample, chState.presence, this.presenceCoeffs);
         
         const volume = this.isMuted ? 0 : this.masterVolume;
-        outputChannel[i] = sample * volume;
+        outputChannel[i] = sample * volume * this.outputLevel;
       }
     }
     
