@@ -1,4 +1,5 @@
 import { useState, useCallback, useEffect, useRef } from 'react';
+import { initializeJUCEBridge, cleanupJUCEBridge, sendParameterToJUCE, isJUCEPlugin } from '@/juce-bridge';
 import { useQuery, useMutation } from '@tanstack/react-query';
 import { Settings, HelpCircle, Volume2, VolumeX } from 'lucide-react';
 import strangerAmpsLogo from '@assets/stranger-amps-logo.png';
@@ -44,6 +45,7 @@ export default function AmpSimulator() {
   const [isAudioConnected, setIsAudioConnected] = useState(false);
   const [isOptimizing, setIsOptimizing] = useState(false);
   const animationRef = useRef<number>();
+  const isJUCE = isJUCEPlugin();
 
   const { data: presets = [], isLoading: presetsLoading } = useQuery<Preset[]>({
     queryKey: ['/api/presets'],
@@ -98,10 +100,22 @@ export default function AmpSimulator() {
     setSettings((prev) => {
       const updated = { ...prev, ...newSettings };
       audioEngine.updateSettings(updated);
+
+      // Send parameter updates to JUCE if running in plugin
+      if (isJUCE) {
+        Object.entries(newSettings).forEach(([key, value]) => {
+          if (typeof value === 'number') {
+            sendParameterToJUCE(key, value);
+          } else if (typeof value === 'boolean') {
+            sendParameterToJUCE(key, value ? 1.0 : 0.0);
+          }
+        });
+      }
+
       return updated;
     });
     setCurrentPreset(null);
-  }, []);
+  }, [isJUCE]);
 
   const handlePresetChange = useCallback((preset: Preset) => {
     setCurrentPreset(preset);
@@ -135,7 +149,7 @@ export default function AmpSimulator() {
 
   const handleAIOptimize = useCallback(async () => {
     setIsOptimizing(true);
-    
+
     const tuningPresets: Record<string, Partial<AmpSettings>> = {
       dropA: { bass: 4, mid: 5, treble: 7, presence: 7, drive: 7, inputGain: 6 },
       dropB: { bass: 4, mid: 4, treble: 7, presence: 6, drive: 8, inputGain: 6 },
@@ -145,10 +159,10 @@ export default function AmpSimulator() {
     };
 
     await new Promise(resolve => setTimeout(resolve, 1500));
-    
+
     const optimizedSettings = tuningPresets[settings.aiTuning] || tuningPresets.dropA;
     handleSettingsChange({ ...optimizedSettings, aiEnhance: true });
-    
+
     setIsOptimizing(false);
     toast({
       title: 'Tone Optimized',
@@ -167,18 +181,18 @@ export default function AmpSimulator() {
         const driveBoost = (settings.drive / 10) * 20;
         const punishBoost = settings.punish ? 15 : 0;
         const dbBoost = settings.plus10db ? 10 : 0;
-        
+
         const totalGain = baseLevel + driveBoost + punishBoost + dbBoost;
         const noise = Math.random() * 10 - 5;
         const level = Math.max(0, Math.min(100, totalGain + noise));
-        
+
         setInputLevel(level);
         setIsClipping(level > 90);
       }
-      
+
       animationRef.current = requestAnimationFrame(updateLevel);
     };
-    
+
     animationRef.current = requestAnimationFrame(updateLevel);
     return () => {
       if (animationRef.current) {
@@ -187,6 +201,40 @@ export default function AmpSimulator() {
     };
   }, [settings.inputGain, settings.drive, settings.punish, settings.plus10db, isAudioConnected]);
 
+  // Initialize JUCE bridge
+  useEffect(() => {
+    if (isJUCE) {
+      console.log('[Stranger Amps] Running in JUCE plugin mode');
+
+      // Initialize bridge with parameter update handler
+      initializeJUCEBridge(
+        (paramId: string, value: number) => {
+          console.log('[JUCE Bridge] Parameter update from native:', paramId, value);
+
+          // Update settings from JUCE (e.g., DAW automation)
+          setSettings((prev) => {
+            const updated = { ...prev, [paramId]: value };
+            audioEngine.updateSettings(updated);
+            return updated;
+          });
+        },
+        (presetData: any) => {
+          console.log('[JUCE Bridge] Preset loaded from native:', presetData);
+          if (presetData.settings) {
+            setSettings(presetData.settings);
+            audioEngine.updateSettings(presetData.settings);
+          }
+        }
+      );
+
+      return () => {
+        cleanupJUCEBridge();
+      };
+    } else {
+      console.log('[Stranger Amps] Running in web mode');
+    }
+  }, [isJUCE]);
+
   useEffect(() => {
     return () => {
       audioEngine.disconnect();
@@ -194,28 +242,28 @@ export default function AmpSimulator() {
   }, []);
 
   const currentIR = builtInIRs[settings.irIndex];
-  const displayIRName = settings.customIRLoaded && settings.customIRName 
-    ? settings.customIRName 
+  const displayIRName = settings.customIRLoaded && settings.customIRName
+    ? settings.customIRName
     : currentIR?.name;
 
   return (
-    <div 
+    <div
       className="h-screen bg-background flex flex-col overflow-hidden"
       data-testid="amp-simulator-page"
     >
       <header className="flex-shrink-0 flex items-center justify-between px-4 py-2 border-b border-border bg-card/50 backdrop-blur-sm z-50 gap-4">
         <div className="flex items-center gap-4">
           <div className="flex items-center gap-2">
-            <img 
-              src={strangerAmpsLogo} 
-              alt="Stranger Amp's" 
+            <img
+              src={strangerAmpsLogo}
+              alt="Stranger Amp's"
               className="w-8 h-8 rounded object-contain"
             />
             <span className="text-lg font-bold tracking-tight hidden md:block">
               STRANGER AMP'S
             </span>
           </div>
-          
+
           <AudioDeviceSelector onConnectionChange={handleAudioConnectionChange} />
         </div>
 
@@ -353,8 +401,8 @@ export default function AmpSimulator() {
 
         <div className="flex flex-col flex-1 max-w-2xl min-w-0">
           <AmpHeadDisplay isClipping={isClipping} />
-          <Cabinet 
-            irName={settings.irBypass ? 'BYPASSED' : displayIRName} 
+          <Cabinet
+            irName={settings.irBypass ? 'BYPASSED' : displayIRName}
             isActive={!settings.irBypass}
             irIndex={settings.customIRLoaded ? -1 : settings.irIndex}
           />
@@ -382,8 +430,8 @@ export default function AmpSimulator() {
           <SpecialFXDialog settings={settings} onSettingsChange={handleSettingsChange} />
           <PitchDialog settings={settings} onSettingsChange={handleSettingsChange} />
           <ReverbDialog settings={settings} onSettingsChange={handleSettingsChange} />
-          <AIEnhanceDialog 
-            settings={settings} 
+          <AIEnhanceDialog
+            settings={settings}
             onSettingsChange={handleSettingsChange}
             onOptimize={handleAIOptimize}
             isOptimizing={isOptimizing}
@@ -393,8 +441,8 @@ export default function AmpSimulator() {
           <DelayPedalDialog settings={settings} onSettingsChange={handleSettingsChange} />
         </div>
         <span className="text-xs text-muted-foreground font-mono hidden md:block">
-          {isAudioConnected 
-            ? 'Audio connected — play your guitar through the amp!' 
+          {isAudioConnected
+            ? 'Audio connected — play your guitar through the amp!'
             : 'Connect your audio interface to start playing'}
         </span>
         <div className="w-20" />
