@@ -14,6 +14,7 @@ import { SpecialFXDialog } from '@/components/amp/ThallFeaturesDialog';
 import { PitchDialog } from '@/components/amp/PitchDialog';
 import { TunerDialog } from '@/components/amp/TunerDialog';
 import { ParametricEQDialog } from '@/components/amp/ParametricEQDialog';
+import { DelayPedalDialog } from '@/components/amp/DelayPedalDialog';
 import { Button } from '@/components/ui/button';
 import {
   Sheet,
@@ -376,6 +377,7 @@ export default function AmpSimulator() {
           />
           <TunerDialog isAudioConnected={isAudioConnected} />
           <ParametricEQDialog settings={settings} onSettingsChange={handleSettingsChange} />
+          <DelayPedalDialog settings={settings} onSettingsChange={handleSettingsChange} />
         </div>
         <span className="text-xs text-muted-foreground font-mono hidden md:block">
           {isAudioConnected 

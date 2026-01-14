@@ -26,6 +26,14 @@ class AmpProcessor extends AudioWorkletProcessor {
     this.peqBand3 = { freq: 2000, gain: 0, q: 1 };
     this.peqBand4 = { freq: 8000, gain: 0, q: 1 };
     
+    this.delayEnabled = false;
+    this.delayTime = 0.4;
+    this.delayFeedback = 0.4;
+    this.delayMix = 0;
+    this.delayBufferSize = 48000 * 2;
+    this.delayBuffer = [new Float32Array(this.delayBufferSize), new Float32Array(this.delayBufferSize)];
+    this.delayWriteIndex = [0, 0];
+    
     this.thickenLastSample = [0, 0];
     this.thickenPeriodHistory = [[0,0,0,0], [0,0,0,0]];
     this.thickenPeriodIdx = [0, 0];
@@ -98,6 +106,11 @@ class AmpProcessor extends AudioWorkletProcessor {
         this.peqBand2 = { freq: data.peqBand2Freq ?? 500, gain: data.peqBand2Gain ?? 0, q: data.peqBand2Q ?? 1 };
         this.peqBand3 = { freq: data.peqBand3Freq ?? 2000, gain: data.peqBand3Gain ?? 0, q: data.peqBand3Q ?? 1 };
         this.peqBand4 = { freq: data.peqBand4Freq ?? 8000, gain: data.peqBand4Gain ?? 0, q: data.peqBand4Q ?? 1 };
+        
+        this.delayEnabled = data.delayEnabled ?? false;
+        this.delayTime = (data.delayTime ?? 400) / 1000;
+        this.delayFeedback = (data.delayFeedback ?? 4) / 10 * 0.8;
+        this.delayMix = this.delayEnabled ? (data.delayMix ?? 3) / 10 : 0;
         
         this.updateCoefficients();
       } else if (type === 'setMuted') {
@@ -335,6 +348,20 @@ class AmpProcessor extends AudioWorkletProcessor {
           sample = this.applyBiquadFilter(sample, this.lofiLpState[channel], this.lofiLpCoeffs);
           sample = this.applyBiquadFilter(sample, this.lofiHpState[channel], this.lofiHpCoeffs);
           sample = sample * 0.8;
+        }
+        
+        if (this.delayEnabled && this.delayMix > 0) {
+          const sampleRate = 48000;
+          const delaySamples = Math.floor(this.delayTime * sampleRate);
+          const readIndex = (this.delayWriteIndex[channel] - delaySamples + this.delayBufferSize) % this.delayBufferSize;
+          const delayedSample = this.delayBuffer[channel][readIndex];
+          
+          const inputToDelay = sample + delayedSample * this.delayFeedback;
+          this.delayBuffer[channel][this.delayWriteIndex[channel]] = inputToDelay;
+          this.delayWriteIndex[channel] = (this.delayWriteIndex[channel] + 1) % this.delayBufferSize;
+          
+          const dryLevel = 1 - (this.delayMix * 0.5);
+          sample = sample * dryLevel + delayedSample * this.delayMix;
         }
         
         const volume = this.isMuted ? 0 : this.masterVolume;

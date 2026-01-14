@@ -54,6 +54,13 @@ export const ampSettingsSchema = z.object({
   aiEnhance: z.boolean().default(false),
   aiTuning: z.enum(['dropA', 'dropB', 'dropC', 'dropD', 'dropE']).default('dropA'),
   
+  // Delay Pedal
+  delayEnabled: z.boolean().default(false),
+  delayTime: z.number().min(50).max(2000).default(400),
+  delayFeedback: z.number().min(0).max(10).default(4),
+  delayMix: z.number().min(0).max(10).default(3),
+  delaySync: z.boolean().default(false),
+  
   // Parametric EQ (4 bands)
   peqEnabled: z.boolean().default(false),
   peqBand1Freq: z.number().min(20).max(20000).default(100),
@@ -132,6 +139,11 @@ export const defaultAmpSettings: AmpSettings = {
   routingMode: 'direct',
   aiEnhance: false,
   aiTuning: 'dropA',
+  delayEnabled: false,
+  delayTime: 400,
+  delayFeedback: 4,
+  delayMix: 3,
+  delaySync: false,
   peqEnabled: false,
   peqBand1Freq: 100,
   peqBand1Gain: 0,

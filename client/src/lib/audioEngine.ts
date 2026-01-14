@@ -34,6 +34,10 @@ class AudioEngine {
   private reverbNode: ConvolverNode | null = null;
   private reverbGainNode: GainNode | null = null;
   private dryGainNode: GainNode | null = null;
+  private delayNode: DelayNode | null = null;
+  private delayFeedbackNode: GainNode | null = null;
+  private delayWetNode: GainNode | null = null;
+  private delayDryNode: GainNode | null = null;
   private analyserNode: AnalyserNode | null = null;
   private workletNode: AudioWorkletNode | null = null;
   private isConnected = false;
@@ -213,6 +217,18 @@ class AudioEngine {
     this.reverbNode = this.audioContext.createConvolver();
     this.reverbNode.buffer = this.createReverbImpulse(2.0, 3.0);
 
+    this.delayNode = this.audioContext.createDelay(2.0);
+    this.delayNode.delayTime.value = 0.4;
+    
+    this.delayFeedbackNode = this.audioContext.createGain();
+    this.delayFeedbackNode.gain.value = 0.4;
+    
+    this.delayWetNode = this.audioContext.createGain();
+    this.delayWetNode.gain.value = 0;
+    
+    this.delayDryNode = this.audioContext.createGain();
+    this.delayDryNode.gain.value = 1;
+
     this.inputNode.connect(this.inputLevelNode);
     this.inputLevelNode.connect(this.inputGainNode);
     this.inputGainNode.connect(this.distortionNode);
@@ -227,8 +243,18 @@ class AudioEngine {
     this.peqBand3.connect(this.peqBand4);
     this.peqBand4.connect(this.gainNode);
     this.gainNode.connect(this.outputLevelNode);
-    this.outputLevelNode.connect(this.dryGainNode);
-    this.outputLevelNode.connect(this.reverbNode);
+    
+    this.outputLevelNode.connect(this.delayDryNode);
+    this.outputLevelNode.connect(this.delayNode);
+    this.delayNode.connect(this.delayFeedbackNode);
+    this.delayFeedbackNode.connect(this.delayNode);
+    this.delayNode.connect(this.delayWetNode);
+    
+    this.delayDryNode.connect(this.dryGainNode);
+    this.delayWetNode.connect(this.dryGainNode);
+    this.delayDryNode.connect(this.reverbNode);
+    this.delayWetNode.connect(this.reverbNode);
+    
     this.reverbNode.connect(this.reverbGainNode);
     this.dryGainNode.connect(this.analyserNode!);
     this.reverbGainNode.connect(this.analyserNode!);
@@ -305,6 +331,10 @@ class AudioEngine {
     this.dryGainNode = null;
     this.reverbGainNode = null;
     this.reverbNode = null;
+    this.delayNode = null;
+    this.delayFeedbackNode = null;
+    this.delayWetNode = null;
+    this.delayDryNode = null;
     this.analyserNode = null;
     this.isConnected = false;
   }
@@ -415,6 +445,20 @@ class AudioEngine {
       if (reverbEnabled && this.reverbNode) {
         this.updateReverbType(settings.reverbType ?? 'room', settings.reverbDecay ?? 5);
       }
+    }
+
+    if (this.delayNode && this.delayFeedbackNode && this.delayWetNode && this.delayDryNode) {
+      const delayEnabled = settings.delayEnabled ?? false;
+      const delayTime = (settings.delayTime ?? 400) / 1000;
+      const delayFeedback = (settings.delayFeedback ?? 4) / 10 * 0.8;
+      const delayMix = delayEnabled ? (settings.delayMix ?? 3) / 10 : 0;
+      
+      const dryLevel = 1 - (delayMix * 0.5);
+      
+      this.delayNode.delayTime.setTargetAtTime(delayTime, this.audioContext!.currentTime, 0.01);
+      this.delayFeedbackNode.gain.setTargetAtTime(delayFeedback, this.audioContext!.currentTime, 0.01);
+      this.delayWetNode.gain.setTargetAtTime(delayMix, this.audioContext!.currentTime, 0.01);
+      this.delayDryNode.gain.setTargetAtTime(dryLevel, this.audioContext!.currentTime, 0.01);
     }
   }
 
