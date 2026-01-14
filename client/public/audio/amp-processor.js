@@ -20,6 +20,12 @@ class AmpProcessor extends AudioWorkletProcessor {
     this.lofiEnabled = false;
     this.cleanseEnabled = false;
     
+    this.peqEnabled = false;
+    this.peqBand1 = { freq: 100, gain: 0, q: 1 };
+    this.peqBand2 = { freq: 500, gain: 0, q: 1 };
+    this.peqBand3 = { freq: 2000, gain: 0, q: 1 };
+    this.peqBand4 = { freq: 8000, gain: 0, q: 1 };
+    
     this.thickenLastSample = [0, 0];
     this.thickenPeriodHistory = [[0,0,0,0], [0,0,0,0]];
     this.thickenPeriodIdx = [0, 0];
@@ -43,9 +49,17 @@ class AmpProcessor extends AudioWorkletProcessor {
         treble: { x1: 0, x2: 0, y1: 0, y2: 0 },
         presence: { x1: 0, x2: 0, y1: 0, y2: 0 },
         lowBoost: { x1: 0, x2: 0, y1: 0, y2: 0 },
+        peq1: { x1: 0, x2: 0, y1: 0, y2: 0 },
+        peq2: { x1: 0, x2: 0, y1: 0, y2: 0 },
+        peq3: { x1: 0, x2: 0, y1: 0, y2: 0 },
+        peq4: { x1: 0, x2: 0, y1: 0, y2: 0 },
       };
     }
     
+    this.peq1Coeffs = null;
+    this.peq2Coeffs = null;
+    this.peq3Coeffs = null;
+    this.peq4Coeffs = null;
     this.bassCoeffs = null;
     this.midCoeffs = null;
     this.trebleCoeffs = null;
@@ -79,6 +93,12 @@ class AmpProcessor extends AudioWorkletProcessor {
         this.lofiEnabled = data.lofi ?? false;
         this.cleanseEnabled = data.cleanse ?? false;
         
+        this.peqEnabled = data.peqEnabled ?? false;
+        this.peqBand1 = { freq: data.peqBand1Freq ?? 100, gain: data.peqBand1Gain ?? 0, q: data.peqBand1Q ?? 1 };
+        this.peqBand2 = { freq: data.peqBand2Freq ?? 500, gain: data.peqBand2Gain ?? 0, q: data.peqBand2Q ?? 1 };
+        this.peqBand3 = { freq: data.peqBand3Freq ?? 2000, gain: data.peqBand3Gain ?? 0, q: data.peqBand3Q ?? 1 };
+        this.peqBand4 = { freq: data.peqBand4Freq ?? 8000, gain: data.peqBand4Gain ?? 0, q: data.peqBand4Q ?? 1 };
+        
         this.updateCoefficients();
       } else if (type === 'setMuted') {
         this.isMuted = data;
@@ -95,6 +115,11 @@ class AmpProcessor extends AudioWorkletProcessor {
     this.lowBoostCoeffs = this.calculateBiquadCoeffs(80, 1, 8, 'lowshelf', sampleRate);
     this.lofiLpCoeffs = this.calculateBiquadCoeffs(2000, 0.7, 0, 'lowpass', sampleRate);
     this.lofiHpCoeffs = this.calculateBiquadCoeffs(300, 0.7, 0, 'highpass', sampleRate);
+    
+    this.peq1Coeffs = this.calculateBiquadCoeffs(this.peqBand1.freq, this.peqBand1.q, this.peqEnabled ? this.peqBand1.gain : 0, 'peaking', sampleRate);
+    this.peq2Coeffs = this.calculateBiquadCoeffs(this.peqBand2.freq, this.peqBand2.q, this.peqEnabled ? this.peqBand2.gain : 0, 'peaking', sampleRate);
+    this.peq3Coeffs = this.calculateBiquadCoeffs(this.peqBand3.freq, this.peqBand3.q, this.peqEnabled ? this.peqBand3.gain : 0, 'peaking', sampleRate);
+    this.peq4Coeffs = this.calculateBiquadCoeffs(this.peqBand4.freq, this.peqBand4.q, this.peqEnabled ? this.peqBand4.gain : 0, 'peaking', sampleRate);
   }
 
   calculateLowpassCoeffs(frequency, Q, sampleRate) {
@@ -298,6 +323,13 @@ class AmpProcessor extends AudioWorkletProcessor {
         sample = this.applyBiquadFilter(sample, chState.mid, this.midCoeffs);
         sample = this.applyBiquadFilter(sample, chState.treble, this.trebleCoeffs);
         sample = this.applyBiquadFilter(sample, chState.presence, this.presenceCoeffs);
+        
+        if (this.peqEnabled && this.peq1Coeffs) {
+          sample = this.applyBiquadFilter(sample, chState.peq1, this.peq1Coeffs);
+          sample = this.applyBiquadFilter(sample, chState.peq2, this.peq2Coeffs);
+          sample = this.applyBiquadFilter(sample, chState.peq3, this.peq3Coeffs);
+          sample = this.applyBiquadFilter(sample, chState.peq4, this.peq4Coeffs);
+        }
         
         if (this.lofiEnabled && this.lofiLpCoeffs && this.lofiHpCoeffs) {
           sample = this.applyBiquadFilter(sample, this.lofiLpState[channel], this.lofiLpCoeffs);

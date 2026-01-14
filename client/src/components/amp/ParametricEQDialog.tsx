@@ -38,27 +38,33 @@ function gainToY(gain: number, height: number): number {
 }
 
 function calculateBandResponse(freq: number, band: Band): number {
-  const omega = (2 * Math.PI * freq) / 48000;
+  const sampleRate = 48000;
+  const w0 = (2 * Math.PI * band.freq) / sampleRate;
   const A = Math.pow(10, band.gain / 40);
-  const omega0 = (2 * Math.PI * band.freq) / 48000;
-  const alpha = Math.sin(omega0) / (2 * band.q);
-  
-  const cosOmega = Math.cos(omega);
-  const cosOmega0 = Math.cos(omega0);
+  const alpha = Math.sin(w0) / (2 * band.q);
   
   const b0 = 1 + alpha * A;
-  const b1 = -2 * cosOmega0;
+  const b1 = -2 * Math.cos(w0);
   const b2 = 1 - alpha * A;
   const a0 = 1 + alpha / A;
-  const a1 = -2 * cosOmega0;
+  const a1 = -2 * Math.cos(w0);
   const a2 = 1 - alpha / A;
   
-  const realNum = (b0 / a0) * Math.cos(0) + (b1 / a0) * cosOmega + (b2 / a0) * Math.cos(2 * omega);
-  const imagNum = -(b0 / a0) * Math.sin(0) - (b1 / a0) * Math.sin(omega) - (b2 / a0) * Math.sin(2 * omega);
-  const realDen = 1 + (a1 / a0) * cosOmega + (a2 / a0) * Math.cos(2 * omega);
-  const imagDen = -(a1 / a0) * Math.sin(omega) - (a2 / a0) * Math.sin(2 * omega);
+  const omega = (2 * Math.PI * freq) / sampleRate;
+  const cosW = Math.cos(omega);
+  const sinW = Math.sin(omega);
+  const cos2W = Math.cos(2 * omega);
+  const sin2W = Math.sin(2 * omega);
   
-  const mag = Math.sqrt((realNum * realNum + imagNum * imagNum) / (realDen * realDen + imagDen * imagDen));
+  const numReal = (b0/a0) + (b1/a0) * cosW + (b2/a0) * cos2W;
+  const numImag = -(b1/a0) * sinW - (b2/a0) * sin2W;
+  const denReal = 1 + (a1/a0) * cosW + (a2/a0) * cos2W;
+  const denImag = -(a1/a0) * sinW - (a2/a0) * sin2W;
+  
+  const numMagSq = numReal * numReal + numImag * numImag;
+  const denMagSq = denReal * denReal + denImag * denImag;
+  const mag = Math.sqrt(numMagSq / Math.max(denMagSq, 1e-10));
+  
   return 20 * Math.log10(Math.max(0.001, mag));
 }
 
