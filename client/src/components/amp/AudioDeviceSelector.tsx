@@ -69,18 +69,18 @@ export function AudioDeviceSelector({ onConnectionChange }: AudioDeviceSelectorP
         disabled={isConnected}
       >
         <SelectTrigger 
-          className="w-40 h-8 text-xs bg-neutral-800 border-neutral-700"
+          className="w-48 h-8 text-xs bg-neutral-800 border-neutral-700"
           data-testid="select-audio-device"
         >
           <SelectValue placeholder="Select input..." />
         </SelectTrigger>
-        <SelectContent>
+        <SelectContent className="min-w-[280px]">
           {inputDevices.length === 0 ? (
             <SelectItem value="none" disabled>No devices found</SelectItem>
           ) : (
             inputDevices.map((device) => (
-              <SelectItem key={device.deviceId} value={device.deviceId}>
-                {device.label.length > 25 ? device.label.slice(0, 25) + '...' : device.label}
+              <SelectItem key={device.deviceId} value={device.deviceId} className="text-xs">
+                {device.label}
               </SelectItem>
             ))
           )}

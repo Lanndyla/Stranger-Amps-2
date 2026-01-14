@@ -62,9 +62,6 @@ export function RightControlPanel({
         <div className="h-px bg-gradient-to-r from-transparent via-neutral-700 to-transparent" />
 
         <div className="space-y-4">
-          <div className="text-center">
-            <span className="text-xs font-bold tracking-[0.25em] text-muted-foreground uppercase">Cabinet IR</span>
-          </div>
           <IRSelector
             selectedIR={settings.irIndex}
             irBypass={settings.irBypass}
