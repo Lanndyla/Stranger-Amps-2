@@ -1,6 +1,7 @@
 import { useState, useCallback, useEffect, useRef } from 'react';
 import { useQuery, useMutation } from '@tanstack/react-query';
 import { Settings, HelpCircle, Volume2, VolumeX } from 'lucide-react';
+import strangerAmpsLogo from '@assets/stranger-amps-logo.png';
 import { AmpHeadDisplay } from '@/components/amp/AmpHeadDisplay';
 import { Cabinet } from '@/components/amp/Cabinet';
 import { LeftControlPanel } from '@/components/amp/LeftControlPanel';
@@ -201,11 +202,13 @@ export default function AmpSimulator() {
       <header className="flex-shrink-0 flex items-center justify-between px-4 py-2 border-b border-border bg-card/50 backdrop-blur-sm z-50 gap-4">
         <div className="flex items-center gap-4">
           <div className="flex items-center gap-2">
-            <div className="w-8 h-8 rounded bg-primary flex items-center justify-center">
-              <span className="text-sm font-bold text-primary-foreground">DS</span>
-            </div>
+            <img 
+              src={strangerAmpsLogo} 
+              alt="Stranger Amp's" 
+              className="w-8 h-8 rounded object-contain"
+            />
             <span className="text-lg font-bold tracking-tight hidden md:block">
-              DJENT SLAYER
+              STRANGER AMP'S
             </span>
           </div>
           
@@ -285,7 +288,7 @@ export default function AmpSimulator() {
                     About
                   </h3>
                   <div className="text-sm text-muted-foreground space-y-2">
-                    <p>DJENT SLAYER is a high-gain amp simulator designed for low tunings and extended range guitars.</p>
+                    <p>STRANGER AMP'S is a high-gain amp simulator designed for low tunings and extended range guitars.</p>
                     <p>Optimized for 7, 8, and 9 string guitars in Drop A through Drop E tunings.</p>
                   </div>
                 </div>
