@@ -13,6 +13,23 @@ class AmpProcessor extends AudioWorkletProcessor {
     this.outputLevel = 0.75;
     this.isMuted = false;
     
+    this.thickenAmount = 0;
+    this.thickenEnabled = false;
+    this.chugAmount = 0;
+    this.chugEnabled = false;
+    this.lofiEnabled = false;
+    this.cleanseEnabled = false;
+    
+    this.thickenBuffers = [new Float32Array(4096), new Float32Array(4096)];
+    this.thickenIndices = [0, 0];
+    this.thickenPhase = [0, 0];
+    this.envelopeFollowers = [0, 0];
+    
+    this.lofiLpState = [{ x1: 0, x2: 0, y1: 0, y2: 0 }, { x1: 0, x2: 0, y1: 0, y2: 0 }];
+    this.lofiHpState = [{ x1: 0, x2: 0, y1: 0, y2: 0 }, { x1: 0, x2: 0, y1: 0, y2: 0 }];
+    this.lofiLpCoeffs = null;
+    this.lofiHpCoeffs = null;
+    
     this.channelStates = [];
     for (let ch = 0; ch < 2; ch++) {
       this.channelStates[ch] = {
@@ -49,6 +66,14 @@ class AmpProcessor extends AudioWorkletProcessor {
         this.lowBoost = data.plusLow;
         this.masterVolume = data.masterVolume / 10;
         this.outputLevel = ((data.outputLevel ?? 5) / 10) * 1.5;
+        
+        this.thickenAmount = ((data.thicken ?? 0) / 10);
+        this.thickenEnabled = data.thickenEnabled ?? false;
+        this.chugAmount = ((data.chugEnhance ?? 0) / 10);
+        this.chugEnabled = data.chugEnabled ?? false;
+        this.lofiEnabled = data.lofi ?? false;
+        this.cleanseEnabled = data.cleanse ?? false;
+        
         this.updateCoefficients();
       } else if (type === 'setMuted') {
         this.isMuted = data;
@@ -63,6 +88,40 @@ class AmpProcessor extends AudioWorkletProcessor {
     this.trebleCoeffs = this.calculateBiquadCoeffs(4000, 1, this.trebleGain, 'highshelf', sampleRate);
     this.presenceCoeffs = this.calculateBiquadCoeffs(6000, 1, this.presenceGain, 'highshelf', sampleRate);
     this.lowBoostCoeffs = this.calculateBiquadCoeffs(80, 1, 8, 'lowshelf', sampleRate);
+    this.lofiLpCoeffs = this.calculateBiquadCoeffs(2000, 0.7, 0, 'lowpass', sampleRate);
+    this.lofiHpCoeffs = this.calculateBiquadCoeffs(300, 0.7, 0, 'highpass', sampleRate);
+  }
+
+  calculateLowpassCoeffs(frequency, Q, sampleRate) {
+    const w0 = 2 * Math.PI * frequency / sampleRate;
+    const cosW0 = Math.cos(w0);
+    const sinW0 = Math.sin(w0);
+    const alpha = sinW0 / (2 * Q);
+    
+    const b0 = (1 - cosW0) / 2;
+    const b1 = 1 - cosW0;
+    const b2 = (1 - cosW0) / 2;
+    const a0 = 1 + alpha;
+    const a1 = -2 * cosW0;
+    const a2 = 1 - alpha;
+    
+    return { b0: b0/a0, b1: b1/a0, b2: b2/a0, a1: a1/a0, a2: a2/a0 };
+  }
+
+  calculateHighpassCoeffs(frequency, Q, sampleRate) {
+    const w0 = 2 * Math.PI * frequency / sampleRate;
+    const cosW0 = Math.cos(w0);
+    const sinW0 = Math.sin(w0);
+    const alpha = sinW0 / (2 * Q);
+    
+    const b0 = (1 + cosW0) / 2;
+    const b1 = -(1 + cosW0);
+    const b2 = (1 + cosW0) / 2;
+    const a0 = 1 + alpha;
+    const a1 = -2 * cosW0;
+    const a2 = 1 - alpha;
+    
+    return { b0: b0/a0, b1: b1/a0, b2: b2/a0, a1: a1/a0, a2: a2/a0 };
   }
 
   calculateBiquadCoeffs(frequency, Q, gain, type, sampleRate) {
@@ -89,6 +148,22 @@ class AmpProcessor extends AudioWorkletProcessor {
       a0 = (A + 1) - (A - 1) * cosW0 + 2 * Math.sqrt(A) * alpha;
       a1 = 2 * ((A - 1) - (A + 1) * cosW0);
       a2 = (A + 1) - (A - 1) * cosW0 - 2 * Math.sqrt(A) * alpha;
+    } else if (type === 'lowpass') {
+      alpha = sinW0 / (2 * Q);
+      b0 = (1 - cosW0) / 2;
+      b1 = 1 - cosW0;
+      b2 = (1 - cosW0) / 2;
+      a0 = 1 + alpha;
+      a1 = -2 * cosW0;
+      a2 = 1 - alpha;
+    } else if (type === 'highpass') {
+      alpha = sinW0 / (2 * Q);
+      b0 = (1 + cosW0) / 2;
+      b1 = -(1 + cosW0);
+      b2 = (1 + cosW0) / 2;
+      a0 = 1 + alpha;
+      a1 = -2 * cosW0;
+      a2 = 1 - alpha;
     } else {
       alpha = sinW0 / (2 * Q);
       b0 = 1 + alpha * A;
@@ -143,7 +218,31 @@ class AmpProcessor extends AudioWorkletProcessor {
       for (let i = 0; i < outputChannel.length; i++) {
         let sample = inputChannel[i] * this.inputLevel * this.inputGain;
         
-        sample = this.applyDistortion(sample, this.driveAmount);
+        if (this.thickenEnabled && this.thickenAmount > 0) {
+          const buffer = this.thickenBuffers[channel] || this.thickenBuffers[0];
+          const idx = this.thickenIndices[channel] || 0;
+          buffer[idx] = sample;
+          
+          const phase = this.thickenPhase[channel] || 0;
+          const subOctave = sample * Math.sin(phase);
+          this.thickenPhase[channel] = (phase + Math.PI / 24) % (Math.PI * 2);
+          
+          sample = sample + subOctave * this.thickenAmount * 0.6;
+          this.thickenIndices[channel] = (idx + 1) % 4096;
+        }
+        
+        if (this.chugEnabled && this.chugAmount > 0) {
+          const envelope = Math.abs(sample);
+          const prevEnv = this.envelopeFollowers[channel] || 0;
+          this.envelopeFollowers[channel] = prevEnv * 0.995 + envelope * 0.005;
+          const transient = Math.max(0, envelope - this.envelopeFollowers[channel] * 1.5);
+          const midBoost = 1 + transient * this.chugAmount * 4;
+          sample = sample * midBoost;
+        }
+        
+        if (!this.cleanseEnabled) {
+          sample = this.applyDistortion(sample, this.driveAmount);
+        }
         
         if (this.lowBoost) {
           sample = this.applyBiquadFilter(sample, chState.lowBoost, this.lowBoostCoeffs);
@@ -153,6 +252,12 @@ class AmpProcessor extends AudioWorkletProcessor {
         sample = this.applyBiquadFilter(sample, chState.mid, this.midCoeffs);
         sample = this.applyBiquadFilter(sample, chState.treble, this.trebleCoeffs);
         sample = this.applyBiquadFilter(sample, chState.presence, this.presenceCoeffs);
+        
+        if (this.lofiEnabled && this.lofiLpCoeffs && this.lofiHpCoeffs) {
+          sample = this.applyBiquadFilter(sample, this.lofiLpState[channel], this.lofiLpCoeffs);
+          sample = this.applyBiquadFilter(sample, this.lofiHpState[channel], this.lofiHpCoeffs);
+          sample = sample * 0.8;
+        }
         
         const volume = this.isMuted ? 0 : this.masterVolume;
         outputChannel[i] = sample * volume * this.outputLevel;

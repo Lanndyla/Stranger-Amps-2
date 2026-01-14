@@ -21,6 +21,18 @@ export const ampSettingsSchema = z.object({
   plus10db: z.boolean().default(false),
   plusLow: z.boolean().default(false),
   
+  // Thall Features
+  thicken: z.number().min(0).max(10).default(0),
+  thickenEnabled: z.boolean().default(false),
+  chugEnhance: z.number().min(0).max(10).default(0),
+  chugEnabled: z.boolean().default(false),
+  lofi: z.boolean().default(false),
+  cleanse: z.boolean().default(false),
+  
+  // Pitch Section
+  pitchShift: z.number().min(-12).max(12).default(0),
+  pitchEnabled: z.boolean().default(false),
+  
   // Output Section
   masterVolume: z.number().min(0).max(10).default(5),
   outputLevel: z.number().min(0).max(10).default(5),
@@ -86,6 +98,14 @@ export const defaultAmpSettings: AmpSettings = {
   punish: false,
   plus10db: false,
   plusLow: false,
+  thicken: 0,
+  thickenEnabled: false,
+  chugEnhance: 0,
+  chugEnabled: false,
+  lofi: false,
+  cleanse: false,
+  pitchShift: 0,
+  pitchEnabled: false,
   masterVolume: 5,
   outputLevel: 5,
   reverbType: 'room',

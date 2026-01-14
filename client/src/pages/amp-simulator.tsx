@@ -9,6 +9,9 @@ import { PresetSelector } from '@/components/amp/PresetSelector';
 import { AudioDeviceSelector } from '@/components/amp/AudioDeviceSelector';
 import { ReverbDialog } from '@/components/amp/ReverbDialog';
 import { AIEnhanceDialog } from '@/components/amp/AIEnhanceDialog';
+import { ThallFeaturesDialog } from '@/components/amp/ThallFeaturesDialog';
+import { PitchDialog } from '@/components/amp/PitchDialog';
+import { TunerDialog } from '@/components/amp/TunerDialog';
 import { Button } from '@/components/ui/button';
 import {
   Sheet,
@@ -357,7 +360,9 @@ export default function AmpSimulator() {
       </main>
 
       <footer className="flex-shrink-0 px-4 py-2 border-t border-border bg-card/50 flex items-center justify-between gap-4">
-        <div className="flex items-center gap-2">
+        <div className="flex items-center gap-2 flex-wrap">
+          <ThallFeaturesDialog settings={settings} onSettingsChange={handleSettingsChange} />
+          <PitchDialog settings={settings} onSettingsChange={handleSettingsChange} />
           <ReverbDialog settings={settings} onSettingsChange={handleSettingsChange} />
           <AIEnhanceDialog 
             settings={settings} 
@@ -365,13 +370,14 @@ export default function AmpSimulator() {
             onOptimize={handleAIOptimize}
             isOptimizing={isOptimizing}
           />
+          <TunerDialog isAudioConnected={isAudioConnected} />
         </div>
-        <span className="text-xs text-muted-foreground font-mono">
+        <span className="text-xs text-muted-foreground font-mono hidden md:block">
           {isAudioConnected 
             ? 'Audio connected — play your guitar through the amp!' 
             : 'Connect your audio interface to start playing'}
         </span>
-        <div className="w-32" />
+        <div className="w-20" />
       </footer>
     </div>
   );
