@@ -6,10 +6,12 @@ import { Cabinet } from '@/components/amp/Cabinet';
 import { LeftControlPanel } from '@/components/amp/LeftControlPanel';
 import { RightControlPanel } from '@/components/amp/RightControlPanel';
 import { PresetSelector } from '@/components/amp/PresetSelector';
+import { AudioDeviceSelector } from '@/components/amp/AudioDeviceSelector';
 import { Button } from '@/components/ui/button';
 import {
   Sheet,
   SheetContent,
+  SheetDescription,
   SheetHeader,
   SheetTitle,
   SheetTrigger,
@@ -21,6 +23,7 @@ import {
 } from '@/components/ui/tooltip';
 import { useToast } from '@/hooks/use-toast';
 import { queryClient, apiRequest } from '@/lib/queryClient';
+import { audioEngine } from '@/lib/audioEngine';
 import { defaultAmpSettings, builtInIRs, type AmpSettings, type Preset } from '@shared/schema';
 
 export default function AmpSimulator() {
@@ -30,6 +33,7 @@ export default function AmpSimulator() {
   const [inputLevel, setInputLevel] = useState(0);
   const [isClipping, setIsClipping] = useState(false);
   const [isMuted, setIsMuted] = useState(false);
+  const [isAudioConnected, setIsAudioConnected] = useState(false);
   const animationRef = useRef<number>();
 
   const { data: presets = [], isLoading: presetsLoading } = useQuery<Preset[]>({
@@ -82,39 +86,79 @@ export default function AmpSimulator() {
   });
 
   const handleSettingsChange = useCallback((newSettings: Partial<AmpSettings>) => {
-    setSettings((prev) => ({ ...prev, ...newSettings }));
+    setSettings((prev) => {
+      const updated = { ...prev, ...newSettings };
+      audioEngine.updateSettings(updated);
+      return updated;
+    });
     setCurrentPreset(null);
   }, []);
 
   const handlePresetChange = useCallback((preset: Preset) => {
     setCurrentPreset(preset);
     setSettings(preset.settings);
+    audioEngine.updateSettings(preset.settings);
   }, []);
 
+  const handleMuteToggle = useCallback(() => {
+    const newMuted = !isMuted;
+    setIsMuted(newMuted);
+    audioEngine.setMuted(newMuted);
+  }, [isMuted]);
+
+  const handleAudioConnectionChange = useCallback((connected: boolean) => {
+    setIsAudioConnected(connected);
+    if (connected) {
+      audioEngine.updateSettings(settings);
+      audioEngine.setMuted(isMuted);
+      toast({
+        title: 'Audio Connected',
+        description: 'Your audio interface is now active. Start playing!',
+      });
+    } else {
+      toast({
+        title: 'Audio Disconnected',
+        description: 'Audio interface has been disconnected.',
+      });
+    }
+  }, [settings, isMuted, toast]);
+
   useEffect(() => {
-    const simulateInput = () => {
-      const baseLevel = (settings.inputGain / 10) * 50;
-      const driveBoost = (settings.drive / 10) * 20;
-      const punishBoost = settings.punish ? 15 : 0;
-      const dbBoost = settings.plus10db ? 10 : 0;
+    const updateLevel = () => {
+      if (isAudioConnected) {
+        const level = audioEngine.getInputLevel();
+        setInputLevel(level);
+        setIsClipping(level > 85);
+      } else {
+        const baseLevel = (settings.inputGain / 10) * 50;
+        const driveBoost = (settings.drive / 10) * 20;
+        const punishBoost = settings.punish ? 15 : 0;
+        const dbBoost = settings.plus10db ? 10 : 0;
+        
+        const totalGain = baseLevel + driveBoost + punishBoost + dbBoost;
+        const noise = Math.random() * 10 - 5;
+        const level = Math.max(0, Math.min(100, totalGain + noise));
+        
+        setInputLevel(level);
+        setIsClipping(level > 90);
+      }
       
-      const totalGain = baseLevel + driveBoost + punishBoost + dbBoost;
-      const noise = Math.random() * 10 - 5;
-      const level = Math.max(0, Math.min(100, totalGain + noise));
-      
-      setInputLevel(level);
-      setIsClipping(level > 90);
-      
-      animationRef.current = requestAnimationFrame(simulateInput);
+      animationRef.current = requestAnimationFrame(updateLevel);
     };
     
-    animationRef.current = requestAnimationFrame(simulateInput);
+    animationRef.current = requestAnimationFrame(updateLevel);
     return () => {
       if (animationRef.current) {
         cancelAnimationFrame(animationRef.current);
       }
     };
-  }, [settings.inputGain, settings.drive, settings.punish, settings.plus10db]);
+  }, [settings.inputGain, settings.drive, settings.punish, settings.plus10db, isAudioConnected]);
+
+  useEffect(() => {
+    return () => {
+      audioEngine.disconnect();
+    };
+  }, []);
 
   const currentIR = builtInIRs[settings.irIndex];
 
@@ -123,16 +167,18 @@ export default function AmpSimulator() {
       className="h-screen bg-background flex flex-col overflow-hidden"
       data-testid="amp-simulator-page"
     >
-      <header className="flex-shrink-0 flex items-center justify-between px-4 py-2 border-b border-border bg-card/50 backdrop-blur-sm z-50">
+      <header className="flex-shrink-0 flex items-center justify-between px-4 py-2 border-b border-border bg-card/50 backdrop-blur-sm z-50 gap-4">
         <div className="flex items-center gap-4">
           <div className="flex items-center gap-2">
             <div className="w-8 h-8 rounded bg-primary flex items-center justify-center">
               <span className="text-sm font-bold text-primary-foreground">DS</span>
             </div>
-            <span className="text-lg font-bold tracking-tight hidden sm:block">
+            <span className="text-lg font-bold tracking-tight hidden md:block">
               DJENT SLAYER
             </span>
           </div>
+          
+          <AudioDeviceSelector onConnectionChange={handleAudioConnectionChange} />
         </div>
 
         <PresetSelector
@@ -149,8 +195,8 @@ export default function AmpSimulator() {
             <TooltipTrigger asChild>
               <Button
                 size="icon"
-                variant="ghost"
-                onClick={() => setIsMuted(!isMuted)}
+                variant={isMuted ? "destructive" : "ghost"}
+                onClick={handleMuteToggle}
                 data-testid="button-mute"
               >
                 {isMuted ? (
@@ -174,6 +220,7 @@ export default function AmpSimulator() {
             <SheetContent className="bg-card border-border">
               <SheetHeader>
                 <SheetTitle>Settings</SheetTitle>
+                <SheetDescription>Configure your amp simulator settings.</SheetDescription>
               </SheetHeader>
               <div className="mt-6 space-y-6">
                 <div className="space-y-3">
@@ -181,6 +228,12 @@ export default function AmpSimulator() {
                     Audio
                   </h3>
                   <div className="space-y-2 text-sm">
+                    <div className="flex items-center justify-between py-2 px-3 rounded bg-muted/50">
+                      <span>Status</span>
+                      <span className={`font-mono ${isAudioConnected ? 'text-green-500' : 'text-muted-foreground'}`}>
+                        {isAudioConnected ? 'Connected' : 'Disconnected'}
+                      </span>
+                    </div>
                     <div className="flex items-center justify-between py-2 px-3 rounded bg-muted/50">
                       <span>Sample Rate</span>
                       <span className="font-mono text-muted-foreground">48000 Hz</span>
@@ -191,7 +244,7 @@ export default function AmpSimulator() {
                     </div>
                     <div className="flex items-center justify-between py-2 px-3 rounded bg-muted/50">
                       <span>Latency</span>
-                      <span className="font-mono text-muted-foreground">5.3 ms</span>
+                      <span className="font-mono text-muted-foreground">~5.3 ms</span>
                     </div>
                   </div>
                 </div>
@@ -237,10 +290,13 @@ export default function AmpSimulator() {
             </TooltipTrigger>
             <TooltipContent side="bottom" className="max-w-xs">
               <div className="space-y-2 text-sm">
+                <p><strong>Getting Started:</strong></p>
+                <p>1. Select your audio interface from the dropdown</p>
+                <p>2. Click CONNECT to enable audio</p>
+                <p>3. Dial in your tone with the controls</p>
                 <p><strong>Controls:</strong></p>
                 <p>Click and drag up/down on knobs to adjust</p>
                 <p>Double-click to reset to default</p>
-                <p>Scroll wheel for fine adjustment</p>
               </div>
             </TooltipContent>
           </Tooltip>
@@ -275,7 +331,9 @@ export default function AmpSimulator() {
 
       <footer className="flex-shrink-0 px-4 py-2 border-t border-border bg-card/50 text-center">
         <span className="text-xs text-muted-foreground font-mono">
-          Use your own IRs — flip IR BYPASS and load your favorite cabinet impulses
+          {isAudioConnected 
+            ? 'Audio connected — play your guitar through the amp!' 
+            : 'Connect your audio interface to start playing'}
         </span>
       </footer>
     </div>

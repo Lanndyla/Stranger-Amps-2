@@ -8,16 +8,15 @@ interface CabinetProps {
 export function Cabinet({ irName = 'Default IR', isActive = true }: CabinetProps) {
   return (
     <div 
-      className="relative w-full"
+      className="relative w-full flex-1"
       data-testid="cabinet"
     >
-      <div className="cabinet-body tolex-texture rounded-b-lg border border-t-0 border-neutral-700 overflow-hidden">
-        <div className="p-3">
+      <div className="cabinet-body tolex-texture rounded-b-lg border border-t-0 border-neutral-700 overflow-hidden h-full flex flex-col">
+        <div className="flex-1 p-3 min-h-0">
           <div 
-            className="cabinet-grill rounded-lg border border-neutral-800/50 overflow-hidden" 
-            style={{ aspectRatio: '16/9' }}
+            className="cabinet-grill rounded-lg border border-neutral-800/50 overflow-hidden h-full"
           >
-            <div className="grid grid-cols-2 gap-2 h-full p-3">
+            <div className="grid grid-cols-2 grid-rows-2 gap-3 h-full p-4">
               {[1, 2, 3, 4].map((speaker) => (
                 <div
                   key={speaker}
@@ -36,7 +35,6 @@ export function Cabinet({ irName = 'Default IR', isActive = true }: CabinetProps
                       inset 0 0 40px rgba(0,0,0,0.4),
                       0 2px 4px rgba(0,0,0,0.5)
                     `,
-                    aspectRatio: '1/1',
                   }}
                 >
                   <div 
@@ -67,7 +65,7 @@ export function Cabinet({ irName = 'Default IR', isActive = true }: CabinetProps
           </div>
         </div>
 
-        <div className="flex items-center justify-center gap-4 px-4 py-2 bg-neutral-900/60 border-t border-neutral-800/50">
+        <div className="flex-shrink-0 flex items-center justify-center gap-4 px-4 py-2 bg-neutral-900/60 border-t border-neutral-800/50">
           <div className={cn(
             "w-2 h-2 rounded-full transition-all",
             isActive 
