@@ -53,6 +53,21 @@ export const ampSettingsSchema = z.object({
   // AI Enhancement
   aiEnhance: z.boolean().default(false),
   aiTuning: z.enum(['dropA', 'dropB', 'dropC', 'dropD', 'dropE']).default('dropA'),
+  
+  // Parametric EQ (4 bands)
+  peqEnabled: z.boolean().default(false),
+  peqBand1Freq: z.number().min(20).max(20000).default(100),
+  peqBand1Gain: z.number().min(-12).max(12).default(0),
+  peqBand1Q: z.number().min(0.1).max(10).default(1),
+  peqBand2Freq: z.number().min(20).max(20000).default(500),
+  peqBand2Gain: z.number().min(-12).max(12).default(0),
+  peqBand2Q: z.number().min(0.1).max(10).default(1),
+  peqBand3Freq: z.number().min(20).max(20000).default(2000),
+  peqBand3Gain: z.number().min(-12).max(12).default(0),
+  peqBand3Q: z.number().min(0.1).max(10).default(1),
+  peqBand4Freq: z.number().min(20).max(20000).default(8000),
+  peqBand4Gain: z.number().min(-12).max(12).default(0),
+  peqBand4Q: z.number().min(0.1).max(10).default(1),
 });
 
 export type AmpSettings = z.infer<typeof ampSettingsSchema>;
@@ -117,6 +132,19 @@ export const defaultAmpSettings: AmpSettings = {
   routingMode: 'direct',
   aiEnhance: false,
   aiTuning: 'dropA',
+  peqEnabled: false,
+  peqBand1Freq: 100,
+  peqBand1Gain: 0,
+  peqBand1Q: 1,
+  peqBand2Freq: 500,
+  peqBand2Gain: 0,
+  peqBand2Q: 1,
+  peqBand3Freq: 2000,
+  peqBand3Gain: 0,
+  peqBand3Q: 1,
+  peqBand4Freq: 8000,
+  peqBand4Gain: 0,
+  peqBand4Q: 1,
 };
 
 // Users table (keep existing)

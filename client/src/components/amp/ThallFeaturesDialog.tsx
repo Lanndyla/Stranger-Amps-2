@@ -48,12 +48,6 @@ export function ThallFeaturesDialog({ settings, onSettingsChange }: ThallFeature
         </DialogHeader>
         
         <div className="space-y-6 pt-4">
-          <div className="p-3 rounded-lg bg-orange-500/10 border border-orange-500/30">
-            <p className="text-xs text-orange-200">
-              Inspired by Buster Odeholm's Thall Amp - ultra-heavy, mix-ready tones for modern metal.
-            </p>
-          </div>
-
           <div className="space-y-4">
             <div className="flex items-center justify-between p-3 rounded-lg bg-neutral-800/50">
               <div className="flex items-center gap-3">

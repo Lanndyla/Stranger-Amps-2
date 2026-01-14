@@ -25,6 +25,10 @@ class AudioEngine {
   private midFilter: BiquadFilterNode | null = null;
   private trebleFilter: BiquadFilterNode | null = null;
   private presenceFilter: BiquadFilterNode | null = null;
+  private peqBand1: BiquadFilterNode | null = null;
+  private peqBand2: BiquadFilterNode | null = null;
+  private peqBand3: BiquadFilterNode | null = null;
+  private peqBand4: BiquadFilterNode | null = null;
   private distortionNode: WaveShaperNode | null = null;
   private lowBoostFilter: BiquadFilterNode | null = null;
   private reverbNode: ConvolverNode | null = null;
@@ -161,6 +165,30 @@ class AudioEngine {
     this.presenceFilter.frequency.value = 6000;
     this.presenceFilter.gain.value = 0;
 
+    this.peqBand1 = this.audioContext.createBiquadFilter();
+    this.peqBand1.type = 'peaking';
+    this.peqBand1.frequency.value = 100;
+    this.peqBand1.Q.value = 1;
+    this.peqBand1.gain.value = 0;
+
+    this.peqBand2 = this.audioContext.createBiquadFilter();
+    this.peqBand2.type = 'peaking';
+    this.peqBand2.frequency.value = 500;
+    this.peqBand2.Q.value = 1;
+    this.peqBand2.gain.value = 0;
+
+    this.peqBand3 = this.audioContext.createBiquadFilter();
+    this.peqBand3.type = 'peaking';
+    this.peqBand3.frequency.value = 2000;
+    this.peqBand3.Q.value = 1;
+    this.peqBand3.gain.value = 0;
+
+    this.peqBand4 = this.audioContext.createBiquadFilter();
+    this.peqBand4.type = 'peaking';
+    this.peqBand4.frequency.value = 8000;
+    this.peqBand4.Q.value = 1;
+    this.peqBand4.gain.value = 0;
+
     this.distortionNode = this.audioContext.createWaveShaper();
     this.distortionNode.oversample = '4x';
     this.distortionNode.curve = this.makeDistortionCurve(50);
@@ -193,7 +221,11 @@ class AudioEngine {
     this.bassFilter.connect(this.midFilter);
     this.midFilter.connect(this.trebleFilter);
     this.trebleFilter.connect(this.presenceFilter);
-    this.presenceFilter.connect(this.gainNode);
+    this.presenceFilter.connect(this.peqBand1);
+    this.peqBand1.connect(this.peqBand2);
+    this.peqBand2.connect(this.peqBand3);
+    this.peqBand3.connect(this.peqBand4);
+    this.peqBand4.connect(this.gainNode);
     this.gainNode.connect(this.outputLevelNode);
     this.outputLevelNode.connect(this.dryGainNode);
     this.outputLevelNode.connect(this.reverbNode);
@@ -262,6 +294,10 @@ class AudioEngine {
     this.midFilter = null;
     this.trebleFilter = null;
     this.presenceFilter = null;
+    this.peqBand1 = null;
+    this.peqBand2 = null;
+    this.peqBand3 = null;
+    this.peqBand4 = null;
     this.distortionNode = null;
     this.lowBoostFilter = null;
     this.gainNode = null;
@@ -319,6 +355,28 @@ class AudioEngine {
     if (this.presenceFilter) {
       const presenceGain = ((settings.presence - 5) / 5) * 8;
       this.presenceFilter.gain.setTargetAtTime(presenceGain, this.audioContext!.currentTime, 0.01);
+    }
+
+    const peqEnabled = settings.peqEnabled ?? false;
+    if (this.peqBand1) {
+      this.peqBand1.frequency.setTargetAtTime(settings.peqBand1Freq ?? 100, this.audioContext!.currentTime, 0.01);
+      this.peqBand1.Q.setTargetAtTime(settings.peqBand1Q ?? 1, this.audioContext!.currentTime, 0.01);
+      this.peqBand1.gain.setTargetAtTime(peqEnabled ? (settings.peqBand1Gain ?? 0) : 0, this.audioContext!.currentTime, 0.01);
+    }
+    if (this.peqBand2) {
+      this.peqBand2.frequency.setTargetAtTime(settings.peqBand2Freq ?? 500, this.audioContext!.currentTime, 0.01);
+      this.peqBand2.Q.setTargetAtTime(settings.peqBand2Q ?? 1, this.audioContext!.currentTime, 0.01);
+      this.peqBand2.gain.setTargetAtTime(peqEnabled ? (settings.peqBand2Gain ?? 0) : 0, this.audioContext!.currentTime, 0.01);
+    }
+    if (this.peqBand3) {
+      this.peqBand3.frequency.setTargetAtTime(settings.peqBand3Freq ?? 2000, this.audioContext!.currentTime, 0.01);
+      this.peqBand3.Q.setTargetAtTime(settings.peqBand3Q ?? 1, this.audioContext!.currentTime, 0.01);
+      this.peqBand3.gain.setTargetAtTime(peqEnabled ? (settings.peqBand3Gain ?? 0) : 0, this.audioContext!.currentTime, 0.01);
+    }
+    if (this.peqBand4) {
+      this.peqBand4.frequency.setTargetAtTime(settings.peqBand4Freq ?? 8000, this.audioContext!.currentTime, 0.01);
+      this.peqBand4.Q.setTargetAtTime(settings.peqBand4Q ?? 1, this.audioContext!.currentTime, 0.01);
+      this.peqBand4.gain.setTargetAtTime(peqEnabled ? (settings.peqBand4Gain ?? 0) : 0, this.audioContext!.currentTime, 0.01);
     }
 
     if (this.distortionNode) {

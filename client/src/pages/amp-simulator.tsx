@@ -12,6 +12,7 @@ import { AIEnhanceDialog } from '@/components/amp/AIEnhanceDialog';
 import { ThallFeaturesDialog } from '@/components/amp/ThallFeaturesDialog';
 import { PitchDialog } from '@/components/amp/PitchDialog';
 import { TunerDialog } from '@/components/amp/TunerDialog';
+import { ParametricEQDialog } from '@/components/amp/ParametricEQDialog';
 import { Button } from '@/components/ui/button';
 import {
   Sheet,
@@ -371,6 +372,7 @@ export default function AmpSimulator() {
             isOptimizing={isOptimizing}
           />
           <TunerDialog isAudioConnected={isAudioConnected} />
+          <ParametricEQDialog settings={settings} onSettingsChange={handleSettingsChange} />
         </div>
         <span className="text-xs text-muted-foreground font-mono hidden md:block">
           {isAudioConnected 
