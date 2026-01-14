@@ -6,6 +6,13 @@ export interface AudioDevice {
   kind: 'audioinput' | 'audiooutput';
 }
 
+export type AudioMode = 'webaudio' | 'worklet' | 'native';
+
+interface NativeBridgeMessage {
+  type: 'settings' | 'audio' | 'status';
+  data: unknown;
+}
+
 class AudioEngine {
   private audioContext: AudioContext | null = null;
   private mediaStream: MediaStream | null = null;
@@ -19,9 +26,17 @@ class AudioEngine {
   private distortionNode: WaveShaperNode | null = null;
   private lowBoostFilter: BiquadFilterNode | null = null;
   private analyserNode: AnalyserNode | null = null;
+  private workletNode: AudioWorkletNode | null = null;
   private isConnected = false;
   private isMuted = false;
   private currentMasterVolume = 5;
+  private currentSettings: AmpSettings | null = null;
+  private audioMode: AudioMode = 'worklet';
+  
+  private websocket: WebSocket | null = null;
+  private nativeBridgeUrl: string = 'ws://localhost:9876';
+  private isNativeConnected = false;
+  private onNativeStatusChange?: (connected: boolean) => void;
 
   async getAudioDevices(): Promise<AudioDevice[]> {
     try {
@@ -38,6 +53,14 @@ class AudioEngine {
       console.error('Failed to get audio devices:', error);
       return [];
     }
+  }
+
+  setAudioMode(mode: AudioMode): void {
+    this.audioMode = mode;
+  }
+
+  getAudioMode(): AudioMode {
+    return this.audioMode;
   }
 
   async connect(inputDeviceId?: string): Promise<boolean> {
@@ -57,59 +80,22 @@ class AudioEngine {
       this.mediaStream = await navigator.mediaDevices.getUserMedia(constraints);
       this.inputNode = this.audioContext.createMediaStreamSource(this.mediaStream);
 
-      this.inputGainNode = this.audioContext.createGain();
-      this.inputGainNode.gain.value = 1;
-
-      this.bassFilter = this.audioContext.createBiquadFilter();
-      this.bassFilter.type = 'lowshelf';
-      this.bassFilter.frequency.value = 200;
-      this.bassFilter.gain.value = 0;
-
-      this.midFilter = this.audioContext.createBiquadFilter();
-      this.midFilter.type = 'peaking';
-      this.midFilter.frequency.value = 1000;
-      this.midFilter.Q.value = 1;
-      this.midFilter.gain.value = 0;
-
-      this.trebleFilter = this.audioContext.createBiquadFilter();
-      this.trebleFilter.type = 'highshelf';
-      this.trebleFilter.frequency.value = 4000;
-      this.trebleFilter.gain.value = 0;
-
-      this.presenceFilter = this.audioContext.createBiquadFilter();
-      this.presenceFilter.type = 'peaking';
-      this.presenceFilter.frequency.value = 5000;
-      this.presenceFilter.Q.value = 0.7;
-      this.presenceFilter.gain.value = 0;
-
-      this.lowBoostFilter = this.audioContext.createBiquadFilter();
-      this.lowBoostFilter.type = 'lowshelf';
-      this.lowBoostFilter.frequency.value = 100;
-      this.lowBoostFilter.gain.value = 0;
-
-      this.distortionNode = this.audioContext.createWaveShaper();
-      this.distortionNode.curve = this.makeDistortionCurve(0);
-      this.distortionNode.oversample = '4x';
-
-      this.gainNode = this.audioContext.createGain();
-      this.gainNode.gain.value = 0.5;
-
       this.analyserNode = this.audioContext.createAnalyser();
-      this.analyserNode.fftSize = 256;
+      this.analyserNode.fftSize = 2048;
+      this.analyserNode.smoothingTimeConstant = 0.8;
 
-      this.inputNode
-        .connect(this.inputGainNode)
-        .connect(this.distortionNode)
-        .connect(this.lowBoostFilter)
-        .connect(this.bassFilter)
-        .connect(this.midFilter)
-        .connect(this.trebleFilter)
-        .connect(this.presenceFilter)
-        .connect(this.gainNode)
-        .connect(this.analyserNode)
-        .connect(this.audioContext.destination);
+      if (this.audioMode === 'worklet') {
+        await this.setupWorkletProcessing();
+      } else {
+        await this.setupStandardProcessing();
+      }
 
       this.isConnected = true;
+      
+      if (this.currentSettings) {
+        this.updateSettings(this.currentSettings);
+      }
+      
       return true;
     } catch (error) {
       console.error('Failed to connect audio:', error);
@@ -117,7 +103,88 @@ class AudioEngine {
     }
   }
 
+  private async setupWorkletProcessing(): Promise<void> {
+    if (!this.audioContext || !this.inputNode) return;
+
+    try {
+      await this.audioContext.audioWorklet.addModule('/audio/amp-processor.js');
+      
+      this.workletNode = new AudioWorkletNode(this.audioContext, 'amp-processor', {
+        numberOfInputs: 1,
+        numberOfOutputs: 1,
+        outputChannelCount: [2],
+      });
+
+      this.inputNode.connect(this.analyserNode!);
+      this.inputNode.connect(this.workletNode);
+      this.workletNode.connect(this.audioContext.destination);
+      
+      console.log('AudioWorklet processing initialized');
+    } catch (error) {
+      console.warn('AudioWorklet failed, falling back to standard processing:', error);
+      await this.setupStandardProcessing();
+    }
+  }
+
+  private async setupStandardProcessing(): Promise<void> {
+    if (!this.audioContext || !this.inputNode) return;
+
+    this.inputGainNode = this.audioContext.createGain();
+    this.inputGainNode.gain.value = 1;
+
+    this.bassFilter = this.audioContext.createBiquadFilter();
+    this.bassFilter.type = 'lowshelf';
+    this.bassFilter.frequency.value = 200;
+    this.bassFilter.gain.value = 0;
+
+    this.midFilter = this.audioContext.createBiquadFilter();
+    this.midFilter.type = 'peaking';
+    this.midFilter.frequency.value = 1000;
+    this.midFilter.Q.value = 1;
+    this.midFilter.gain.value = 0;
+
+    this.trebleFilter = this.audioContext.createBiquadFilter();
+    this.trebleFilter.type = 'highshelf';
+    this.trebleFilter.frequency.value = 4000;
+    this.trebleFilter.gain.value = 0;
+
+    this.presenceFilter = this.audioContext.createBiquadFilter();
+    this.presenceFilter.type = 'highshelf';
+    this.presenceFilter.frequency.value = 6000;
+    this.presenceFilter.gain.value = 0;
+
+    this.distortionNode = this.audioContext.createWaveShaper();
+    this.distortionNode.oversample = '4x';
+    this.distortionNode.curve = this.makeDistortionCurve(50);
+
+    this.lowBoostFilter = this.audioContext.createBiquadFilter();
+    this.lowBoostFilter.type = 'lowshelf';
+    this.lowBoostFilter.frequency.value = 80;
+    this.lowBoostFilter.gain.value = 0;
+
+    this.gainNode = this.audioContext.createGain();
+    this.gainNode.gain.value = 0.5;
+
+    this.inputNode.connect(this.inputGainNode);
+    this.inputGainNode.connect(this.distortionNode);
+    this.distortionNode.connect(this.lowBoostFilter);
+    this.lowBoostFilter.connect(this.bassFilter);
+    this.bassFilter.connect(this.midFilter);
+    this.midFilter.connect(this.trebleFilter);
+    this.trebleFilter.connect(this.presenceFilter);
+    this.presenceFilter.connect(this.gainNode);
+    this.gainNode.connect(this.analyserNode!);
+    this.analyserNode!.connect(this.audioContext.destination);
+    
+    console.log('Standard Web Audio processing initialized');
+  }
+
   async disconnect(): Promise<void> {
+    if (this.workletNode) {
+      this.workletNode.disconnect();
+      this.workletNode = null;
+    }
+
     if (this.mediaStream) {
       this.mediaStream.getTracks().forEach(track => track.stop());
       this.mediaStream = null;
@@ -142,7 +209,22 @@ class AudioEngine {
   }
 
   updateSettings(settings: AmpSettings): void {
+    this.currentSettings = settings;
+    this.currentMasterVolume = settings.masterVolume;
+
+    if (this.isNativeConnected && this.websocket) {
+      this.sendToNativeBridge({ type: 'settings', data: settings });
+    }
+
     if (!this.isConnected) return;
+
+    if (this.workletNode) {
+      this.workletNode.port.postMessage({
+        type: 'updateSettings',
+        data: settings,
+      });
+      return;
+    }
 
     if (this.inputGainNode) {
       const inputGain = (settings.inputGain / 10) * 2;
@@ -186,7 +268,6 @@ class AudioEngine {
     }
 
     if (this.gainNode) {
-      this.currentMasterVolume = settings.masterVolume;
       const masterVolume = this.isMuted ? 0 : (settings.masterVolume / 10);
       this.gainNode.gain.setTargetAtTime(masterVolume, this.audioContext!.currentTime, 0.01);
     }
@@ -194,6 +275,15 @@ class AudioEngine {
 
   setMuted(muted: boolean): void {
     this.isMuted = muted;
+
+    if (this.workletNode) {
+      this.workletNode.port.postMessage({
+        type: 'setMuted',
+        data: muted,
+      });
+      return;
+    }
+
     if (this.gainNode && this.audioContext) {
       const volume = muted ? 0 : (this.currentMasterVolume / 10);
       this.gainNode.gain.setTargetAtTime(volume, this.audioContext.currentTime, 0.01);
@@ -216,6 +306,82 @@ class AudioEngine {
 
   getIsConnected(): boolean {
     return this.isConnected;
+  }
+
+  connectToNativeBridge(url?: string, onStatusChange?: (connected: boolean) => void): void {
+    if (url) {
+      this.nativeBridgeUrl = url;
+    }
+    this.onNativeStatusChange = onStatusChange;
+
+    try {
+      this.websocket = new WebSocket(this.nativeBridgeUrl);
+
+      this.websocket.onopen = () => {
+        console.log('Connected to native audio bridge');
+        this.isNativeConnected = true;
+        this.onNativeStatusChange?.(true);
+        
+        if (this.currentSettings) {
+          this.sendToNativeBridge({ type: 'settings', data: this.currentSettings });
+        }
+      };
+
+      this.websocket.onclose = () => {
+        console.log('Disconnected from native audio bridge');
+        this.isNativeConnected = false;
+        this.onNativeStatusChange?.(false);
+      };
+
+      this.websocket.onerror = (error) => {
+        console.warn('Native bridge connection error:', error);
+        this.isNativeConnected = false;
+        this.onNativeStatusChange?.(false);
+      };
+
+      this.websocket.onmessage = (event) => {
+        try {
+          const message = JSON.parse(event.data) as NativeBridgeMessage;
+          this.handleNativeBridgeMessage(message);
+        } catch (e) {
+          console.error('Failed to parse native bridge message:', e);
+        }
+      };
+    } catch (error) {
+      console.error('Failed to connect to native bridge:', error);
+      this.onNativeStatusChange?.(false);
+    }
+  }
+
+  disconnectFromNativeBridge(): void {
+    if (this.websocket) {
+      this.websocket.close();
+      this.websocket = null;
+    }
+    this.isNativeConnected = false;
+    this.onNativeStatusChange?.(false);
+  }
+
+  isNativeBridgeConnected(): boolean {
+    return this.isNativeConnected;
+  }
+
+  private sendToNativeBridge(message: NativeBridgeMessage): void {
+    if (this.websocket && this.websocket.readyState === WebSocket.OPEN) {
+      this.websocket.send(JSON.stringify(message));
+    }
+  }
+
+  private handleNativeBridgeMessage(message: NativeBridgeMessage): void {
+    switch (message.type) {
+      case 'status':
+        console.log('Native bridge status:', message.data);
+        break;
+      case 'audio':
+        break;
+      default:
+        console.log('Unknown native bridge message:', message);
+    }
   }
 
   private makeDistortionCurve(amount: number): Float32Array {
