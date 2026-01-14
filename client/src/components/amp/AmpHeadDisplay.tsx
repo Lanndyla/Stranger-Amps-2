@@ -22,10 +22,10 @@ export function AmpHeadDisplay({ isClipping = false }: AmpHeadDisplayProps) {
           
           <div className="flex items-center gap-3">
             <span className="text-2xl font-black tracking-tight bg-gradient-to-r from-primary to-amber-400 bg-clip-text text-transparent">
-              DJENT
+              STRANGER
             </span>
             <span className="text-2xl font-black tracking-tight text-foreground">
-              SLAYER
+              AMPS
             </span>
           </div>
           

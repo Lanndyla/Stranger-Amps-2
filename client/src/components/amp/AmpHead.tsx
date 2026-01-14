@@ -36,10 +36,10 @@ export function AmpHead({
           
           <div className="flex items-center gap-2">
             <span className="text-2xl font-bold tracking-tight text-primary">
-              DJENT
+              STRANGER
             </span>
             <span className="text-2xl font-bold tracking-tight text-foreground">
-              SLAYER
+              AMPS
             </span>
             <span className="text-xs font-mono text-muted-foreground ml-2">
               II II II II
