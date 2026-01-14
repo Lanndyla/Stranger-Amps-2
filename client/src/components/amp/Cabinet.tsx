@@ -16,11 +16,11 @@ export function Cabinet({ irName = 'Default IR', isActive = true }: CabinetProps
           <div 
             className="cabinet-grill rounded-lg border border-neutral-800/50 overflow-hidden h-full"
           >
-            <div className="grid grid-cols-2 grid-rows-2 gap-3 h-full p-4">
+            <div className="grid grid-cols-2 grid-rows-2 gap-2 h-full p-3 place-items-center">
               {[1, 2, 3, 4].map((speaker) => (
                 <div
                   key={speaker}
-                  className="relative rounded-full flex items-center justify-center overflow-hidden"
+                  className="relative rounded-full flex items-center justify-center overflow-hidden aspect-square w-[90%] max-w-[120px]"
                   style={{
                     background: `
                       radial-gradient(circle at 50% 50%, 
@@ -31,8 +31,8 @@ export function Cabinet({ irName = 'Default IR', isActive = true }: CabinetProps
                       )
                     `,
                     boxShadow: `
-                      inset 0 0 20px rgba(0,0,0,0.8),
-                      inset 0 0 40px rgba(0,0,0,0.4),
+                      inset 0 0 15px rgba(0,0,0,0.8),
+                      inset 0 0 30px rgba(0,0,0,0.4),
                       0 2px 4px rgba(0,0,0,0.5)
                     `,
                   }}
@@ -54,7 +54,7 @@ export function Cabinet({ irName = 'Default IR', isActive = true }: CabinetProps
                   <div 
                     className="absolute inset-[30%] rounded-full bg-neutral-900"
                     style={{
-                      boxShadow: 'inset 0 0 10px rgba(0,0,0,0.8)',
+                      boxShadow: 'inset 0 0 8px rgba(0,0,0,0.8)',
                     }}
                   >
                     <div className="absolute inset-[30%] rounded-full bg-neutral-800/50" />
