@@ -1,0 +1,33 @@
+/* JUCE WebView Compatibility Fix */
+/* Disable backdrop-filter which causes black screen in older WebKit versions */
+
+/* Detect JUCE environment and disable problematic CSS properties */
+@supports (-webkit-backdrop-filter: blur(10px)) or (backdrop-filter: blur(10px)) {
+  /* Override all backdrop-filter usage when in JUCE */
+  html.juce-webview *,
+  html.juce-webview *::before,
+  html.juce-webview *::after {
+    backdrop-filter: none !important;
+    -webkit-backdrop-filter: none !important;
+  }
+  
+  /* Fallback: use semi-transparent backgrounds instead */
+  html.juce-webview [class*="backdrop-blur"],
+  html.juce-webview [class*="glass"] {
+    background-color: rgba(0, 0, 0, 0.8) !important;
+  }
+}
+
+/* Ensure body and html are visible */
+html, body {
+  min-height: 100vh;
+  background-color: #000;
+}
+
+/* Force hardware acceleration for better rendering */
+html.juce-webview {
+  -webkit-transform: translateZ(0);
+  transform: translateZ(0);
+  -webkit-backface-visibility: hidden;
+  backface-visibility: hidden;
+}

@@ -10,8 +10,46 @@ StrangerAmpsEditor::StrangerAmpsEditor(StrangerAmpsProcessor &p)
   // Create WebView bridge
   bridge = std::make_unique<WebViewBridge>(audioProcessor);
 
-  // Create WebView component (JUCE 8 uses default constructor)
-  webView = std::make_unique<juce::WebBrowserComponent>();
+  // Create WebView component with options
+  auto options =
+      juce::WebBrowserComponent::Options()
+          .withBackend(juce::WebBrowserComponent::Options::Backend::webview2)
+#if JUCE_WINDOWS
+          .withWinWebView2Options(
+              juce::WebBrowserComponent::Options::WinWebView2()
+                  .withUserDataFolder(juce::File::getSpecialLocation(
+                      juce::File::SpecialLocationType::tempDirectory)))
+#endif
+          .withNativeIntegrationEnabled()
+          .withUserScript(R"(
+                          window.JUCE = window.JUCE || {};
+                          window.JUCE.postMessage = function(message) {
+                              if (typeof message === 'object') {
+                                  window.sendMessageToJuce(JSON.stringify(message));
+                              } else {
+                                  window.sendMessageToJuce(message);
+                              }
+                          };
+                      )")
+          .withNativeFunction(
+              "sendMessageToJuce",
+              [this](const juce::Array<juce::var> &args,
+                     juce::WebBrowserComponent::NativeFunctionCompletion
+                         completion) {
+                if (args.size() > 0 && bridge != nullptr) {
+                  // The message should be a JSON string
+                  juce::String message = args[0].toString();
+
+                  // We need to run this on the message thread because it might
+                  // affect UI/Params
+                  juce::MessageManager::callAsync([this, message]() {
+                    bridge->handleMessageFromWeb(message);
+                  });
+                }
+                completion(juce::var());
+              });
+
+  webView = std::make_unique<juce::WebBrowserComponent>(options);
   addAndMakeVisible(*webView);
 
   // Set up fallback label (shown if WebView fails)
@@ -22,15 +60,53 @@ StrangerAmpsEditor::StrangerAmpsEditor(StrangerAmpsProcessor &p)
   fallbackLabel.setColour(juce::Label::textColourId, juce::Colours::white);
   addAndMakeVisible(fallbackLabel);
 
+  // Hide fallback label immediately and ensure WebView is on top
+  fallbackLabel.setVisible(false);
+  webView->toFront(true);
+
   // Try to load the web UI
-  // Load from Vercel deployment (bypasses file:// CORS issues with JS modules)
-  const juce::String vercelURL = "https://stranger-amps-2.vercel.app";
+  // Load from local resources for debugging/stability
+  // This expects the WebUI folder to be in the App Bundle's Resources on macOS
+  juce::File resourcesDir =
+      juce::File::getSpecialLocation(juce::File::currentExecutableFile)
+          .getParentDirectory() // MacOS
+          .getParentDirectory() // Contents
+          .getChildFile("Resources")
+          .getChildFile("WebUI");
+
+  // Fallback for development (if running from build folder structure)
+  if (!resourcesDir.exists()) {
+    // Try finding it relative to the source code (helpful for dev)
+    // Note: This path might need adjustment based on your specific build dir
+    // structure
+    resourcesDir =
+        juce::File::getSpecialLocation(juce::File::currentExecutableFile)
+            .getParentDirectory()
+            .getParentDirectory()
+            .getParentDirectory()
+            .getParentDirectory() // Build/Debug/Standalone
+            .getChildFile("Resources")
+            .getChildFile("WebUI");
+  }
+
+  juce::File indexFile = resourcesDir.getChildFile("index.html");
+  juce::String urlToLoad;
+
+  if (indexFile.existsAsFile()) {
+    urlToLoad = indexFile.getFullPathName();
+    juce::Logger::writeToLog("Loading local file: " + urlToLoad);
+  } else {
+    // Final fallback to vercel if local fails
+    urlToLoad = "https://stranger-amps-2.vercel.app";
+    juce::Logger::writeToLog("Local file not found, falling back to: " +
+                             urlToLoad);
+  }
 
   juce::Logger::writeToLog("=== Stranger Amps WebView Debug ===");
-  juce::Logger::writeToLog("Attempting to load: " + vercelURL);
+  juce::Logger::writeToLog("Attempting to load: " + urlToLoad);
 
   // Try loading the URL
-  webView->goToURL(vercelURL);
+  webView->goToURL(urlToLoad);
 
   juce::Logger::writeToLog("WebView pointer valid: " +
                            juce::String(webView != nullptr ? "yes" : "no"));

@@ -16,12 +16,14 @@ CPMAddPackage(
 )
 
 # Plugin configuration
+# Plugin configuration
 juce_add_plugin(StrangerAmps
     COMPANY_NAME "Stranger Audio"
     PLUGIN_MANUFACTURER_CODE Stgr
     PLUGIN_CODE Samp
     FORMATS VST3 AU Standalone
     PRODUCT_NAME "Stranger Amps"
+    BUNDLE_ID "com.Stranger_Audio.StrangerAmps"
     NEEDS_WEB_BROWSER TRUE  # Enables juce_gui_extra WebView
     IS_SYNTH FALSE
     NEEDS_MIDI_INPUT FALSE
@@ -31,6 +33,7 @@ juce_add_plugin(StrangerAmps
     COPY_PLUGIN_AFTER_BUILD TRUE
     VST3_CATEGORIES "Fx" "Distortion"
     AU_MAIN_TYPE "kAudioUnitType_Effect"
+    PLIST_TO_MERGE "<key>NSAppTransportSecurity</key><dict><key>NSAllowsArbitraryLoads</key><true/></dict>"
 )
 
 # Source files
