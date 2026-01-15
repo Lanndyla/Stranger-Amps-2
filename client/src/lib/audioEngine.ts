@@ -1,4 +1,5 @@
 import type { AmpSettings } from '@shared/schema';
+import { isJUCEPlugin } from '../juce-bridge';
 
 export interface AudioDevice {
   deviceId: string;
@@ -47,13 +48,15 @@ class AudioEngine {
   private audioMode: AudioMode = 'worklet';
   private customIRBuffer: AudioBuffer | null = null;
   private customIRConvolver: ConvolverNode | null = null;
-  
+
   private websocket: WebSocket | null = null;
   private nativeBridgeUrl: string = 'ws://localhost:9876';
   private isNativeConnected = false;
   private onNativeStatusChange?: (connected: boolean) => void;
 
   async getAudioDevices(): Promise<AudioDevice[]> {
+    if (isJUCEPlugin()) return []; // JUCE handles audio I/O natively
+
     try {
       await navigator.mediaDevices.getUserMedia({ audio: true });
       const devices = await navigator.mediaDevices.enumerateDevices();
@@ -79,6 +82,11 @@ class AudioEngine {
   }
 
   async connect(inputDeviceId?: string): Promise<boolean> {
+    if (isJUCEPlugin()) {
+      console.log('Audio connection handled by JUCE host');
+      return true; // Mock success for UI state
+    }
+
     try {
       if (this.isConnected) {
         await this.disconnect();
@@ -87,7 +95,7 @@ class AudioEngine {
       this.audioContext = new AudioContext({ sampleRate: 48000 });
 
       const constraints: MediaStreamConstraints = {
-        audio: inputDeviceId 
+        audio: inputDeviceId
           ? { deviceId: { exact: inputDeviceId }, echoCancellation: false, noiseSuppression: false, autoGainControl: false }
           : { echoCancellation: false, noiseSuppression: false, autoGainControl: false }
       };
@@ -106,11 +114,11 @@ class AudioEngine {
       }
 
       this.isConnected = true;
-      
+
       if (this.currentSettings) {
         this.updateSettings(this.currentSettings);
       }
-      
+
       return true;
     } catch (error) {
       console.error('Failed to connect audio:', error);
@@ -123,7 +131,7 @@ class AudioEngine {
 
     try {
       await this.audioContext.audioWorklet.addModule('/audio/amp-processor.js');
-      
+
       this.workletNode = new AudioWorkletNode(this.audioContext, 'amp-processor', {
         numberOfInputs: 1,
         numberOfOutputs: 1,
@@ -133,7 +141,7 @@ class AudioEngine {
       this.inputNode.connect(this.analyserNode!);
       this.inputNode.connect(this.workletNode);
       this.workletNode.connect(this.audioContext.destination);
-      
+
       console.log('AudioWorklet processing initialized');
     } catch (error) {
       console.warn('AudioWorklet failed, falling back to standard processing:', error);
@@ -221,13 +229,13 @@ class AudioEngine {
 
     this.delayNode = this.audioContext.createDelay(2.0);
     this.delayNode.delayTime.value = 0.4;
-    
+
     this.delayFeedbackNode = this.audioContext.createGain();
     this.delayFeedbackNode.gain.value = 0.4;
-    
+
     this.delayWetNode = this.audioContext.createGain();
     this.delayWetNode.gain.value = 0;
-    
+
     this.delayDryNode = this.audioContext.createGain();
     this.delayDryNode.gain.value = 1;
 
@@ -245,23 +253,23 @@ class AudioEngine {
     this.peqBand3.connect(this.peqBand4);
     this.peqBand4.connect(this.gainNode);
     this.gainNode.connect(this.outputLevelNode);
-    
+
     this.outputLevelNode.connect(this.delayDryNode);
     this.outputLevelNode.connect(this.delayNode);
     this.delayNode.connect(this.delayFeedbackNode);
     this.delayFeedbackNode.connect(this.delayNode);
     this.delayNode.connect(this.delayWetNode);
-    
+
     this.delayDryNode.connect(this.dryGainNode);
     this.delayWetNode.connect(this.dryGainNode);
     this.delayDryNode.connect(this.reverbNode);
     this.delayWetNode.connect(this.reverbNode);
-    
+
     this.reverbNode.connect(this.reverbGainNode);
     this.dryGainNode.connect(this.analyserNode!);
     this.reverbGainNode.connect(this.analyserNode!);
     this.analyserNode!.connect(this.audioContext.destination);
-    
+
     console.log('Standard Web Audio processing initialized');
   }
 
@@ -270,7 +278,7 @@ class AudioEngine {
     const sampleRate = this.audioContext.sampleRate;
     const length = sampleRate * duration;
     const buffer = this.audioContext.createBuffer(2, length, sampleRate);
-    
+
     for (let channel = 0; channel < 2; channel++) {
       const channelData = buffer.getChannelData(channel);
       for (let i = 0; i < length; i++) {
@@ -284,7 +292,7 @@ class AudioEngine {
 
   private updateReverbType(type: string, decay: number): void {
     if (!this.audioContext || !this.reverbNode) return;
-    
+
     const typeParams: Record<string, { decay: number; duration: number }> = {
       hall: { decay: 1.5, duration: 4.0 },
       room: { decay: 3.0, duration: 2.0 },
@@ -293,7 +301,7 @@ class AudioEngine {
       ambient: { decay: 1.0, duration: 5.0 },
       shimmer: { decay: 0.8, duration: 6.0 },
     };
-    
+
     const params = typeParams[type] || typeParams.room;
     const adjustedDecay = params.decay * (1 - (decay - 5) * 0.1);
     this.reverbNode.buffer = this.createReverbImpulse(adjustedDecay, params.duration);
@@ -443,7 +451,7 @@ class AudioEngine {
       const dryMix = reverbEnabled ? (1 - reverbMix * 0.5) : 1;
       this.reverbGainNode.gain.setTargetAtTime(reverbMix, this.audioContext!.currentTime, 0.01);
       this.dryGainNode.gain.setTargetAtTime(dryMix, this.audioContext!.currentTime, 0.01);
-      
+
       if (reverbEnabled && this.reverbNode) {
         this.updateReverbType(settings.reverbType ?? 'room', settings.reverbDecay ?? 5);
       }
@@ -454,9 +462,9 @@ class AudioEngine {
       const delayTime = (settings.delayTime ?? 400) / 1000;
       const delayFeedback = (settings.delayFeedback ?? 4) / 10 * 0.8;
       const delayMix = delayEnabled ? (settings.delayMix ?? 3) / 10 : 0;
-      
+
       const dryLevel = 1 - (delayMix * 0.5);
-      
+
       this.delayNode.delayTime.setTargetAtTime(delayTime, this.audioContext!.currentTime, 0.01);
       this.delayFeedbackNode.gain.setTargetAtTime(delayFeedback, this.audioContext!.currentTime, 0.01);
       this.delayWetNode.gain.setTargetAtTime(delayMix, this.audioContext!.currentTime, 0.01);
@@ -512,7 +520,7 @@ class AudioEngine {
         console.log('Connected to native audio bridge');
         this.isNativeConnected = true;
         this.onNativeStatusChange?.(true);
-        
+
         if (this.currentSettings) {
           this.sendToNativeBridge({ type: 'settings', data: this.currentSettings });
         }
@@ -599,7 +607,7 @@ class AudioEngine {
 
       const arrayBuffer = await file.arrayBuffer();
       this.customIRBuffer = await this.audioContext.decodeAudioData(arrayBuffer);
-      
+
       if (this.customIRConvolver) {
         this.customIRConvolver.disconnect();
       }
@@ -608,7 +616,7 @@ class AudioEngine {
 
       const name = file.name.replace(/\.wav$/i, '').toUpperCase();
       console.log('Custom IR loaded:', name);
-      
+
       return { success: true, name };
     } catch (error) {
       console.error('Failed to load custom IR:', error);

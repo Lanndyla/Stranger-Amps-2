@@ -1,4 +1,5 @@
 import { useState, useEffect, useRef, useCallback } from 'react';
+import { isJUCEPlugin } from '@/juce-bridge';
 import { Gauge } from 'lucide-react';
 import {
   Dialog,
@@ -32,7 +33,7 @@ export function TunerDialog({ isAudioConnected }: TunerDialogProps) {
   const [currentFreq, setCurrentFreq] = useState<number>(0);
   const [cents, setCents] = useState<number>(0);
   const [selectedTuning, setSelectedTuning] = useState<keyof typeof DROP_TUNINGS>('dropA7');
-  
+
   const analyserRef = useRef<AnalyserNode | null>(null);
   const audioContextRef = useRef<AudioContext | null>(null);
   const animationFrameRef = useRef<number | null>(null);
@@ -44,7 +45,7 @@ export function TunerDialog({ isAudioConnected }: TunerDialogProps) {
     const centsOff = Math.round((noteNum - roundedNote) * 100);
     const noteIndex = ((roundedNote % 12) + 12) % 12;
     const octave = Math.floor((roundedNote + 9) / 12) + 4;
-    
+
     return {
       note: NOTE_STRINGS[noteIndex],
       octave,
@@ -55,37 +56,37 @@ export function TunerDialog({ isAudioConnected }: TunerDialogProps) {
   const autoCorrelate = useCallback((buffer: Float32Array, sampleRate: number) => {
     let SIZE = buffer.length;
     let rms = 0;
-    
+
     for (let i = 0; i < SIZE; i++) {
       rms += buffer[i] * buffer[i];
     }
     rms = Math.sqrt(rms / SIZE);
-    
+
     if (rms < 0.01) return -1;
-    
+
     let r1 = 0, r2 = SIZE - 1;
     const thres = 0.2;
-    
+
     for (let i = 0; i < SIZE / 2; i++) {
       if (Math.abs(buffer[i]) < thres) { r1 = i; break; }
     }
     for (let i = 1; i < SIZE / 2; i++) {
       if (Math.abs(buffer[SIZE - i]) < thres) { r2 = SIZE - i; break; }
     }
-    
+
     buffer = buffer.slice(r1, r2);
     SIZE = buffer.length;
-    
+
     const c = new Array(SIZE).fill(0);
     for (let i = 0; i < SIZE; i++) {
       for (let j = 0; j < SIZE - i; j++) {
         c[i] += buffer[j] * buffer[j + i];
       }
     }
-    
+
     let d = 0;
     while (c[d] > c[d + 1]) d++;
-    
+
     let maxval = -1, maxpos = -1;
     for (let i = d; i < SIZE; i++) {
       if (c[i] > maxval) {
@@ -93,26 +94,26 @@ export function TunerDialog({ isAudioConnected }: TunerDialogProps) {
         maxpos = i;
       }
     }
-    
+
     let T0 = maxpos;
-    
+
     const x1 = c[T0 - 1], x2 = c[T0], x3 = c[T0 + 1];
     const a = (x1 + x3 - 2 * x2) / 2;
     const b = (x3 - x1) / 2;
     if (a) T0 = T0 - b / (2 * a);
-    
+
     return sampleRate / T0;
   }, []);
 
   const updatePitch = useCallback(() => {
     if (!analyserRef.current || !audioContextRef.current) return;
-    
+
     const bufferLength = analyserRef.current.fftSize;
     const buffer = new Float32Array(bufferLength);
     analyserRef.current.getFloatTimeDomainData(buffer);
-    
+
     const freq = autoCorrelate(buffer, audioContextRef.current.sampleRate);
-    
+
     if (freq > 0 && freq < 2000) {
       setCurrentFreq(Math.round(freq * 10) / 10);
       const { note, octave, cents } = getNoteFromFrequency(freq);
@@ -122,21 +123,22 @@ export function TunerDialog({ isAudioConnected }: TunerDialogProps) {
       setCurrentNote(null);
       setCents(0);
     }
-    
+
     animationFrameRef.current = requestAnimationFrame(updatePitch);
   }, [autoCorrelate, getNoteFromFrequency]);
 
   const startTuner = useCallback(async () => {
+    if (isJUCEPlugin()) return; // Tuner relies on getUserMedia, not supported in JUCE
     try {
       const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
       streamRef.current = stream;
-      
+
       audioContextRef.current = new AudioContext();
       const source = audioContextRef.current.createMediaStreamSource(stream);
-      
+
       analyserRef.current = audioContextRef.current.createAnalyser();
       analyserRef.current.fftSize = 4096;
-      
+
       source.connect(analyserRef.current);
       updatePitch();
     } catch (err) {
@@ -168,7 +170,7 @@ export function TunerDialog({ isAudioConnected }: TunerDialogProps) {
     } else {
       stopTuner();
     }
-    
+
     return () => {
       stopTuner();
     };
@@ -206,7 +208,7 @@ export function TunerDialog({ isAudioConnected }: TunerDialogProps) {
             Chromatic tuner optimized for low tunings
           </DialogDescription>
         </DialogHeader>
-        
+
         <div className="space-y-6 pt-4">
           <div className="flex flex-wrap gap-2 justify-center">
             {(Object.keys(DROP_TUNINGS) as Array<keyof typeof DROP_TUNINGS>).map((key) => (
@@ -236,9 +238,9 @@ export function TunerDialog({ isAudioConnected }: TunerDialogProps) {
             <div className="absolute inset-0 flex items-center justify-center">
               <div className="w-px h-full bg-green-500/50" />
             </div>
-            <div 
+            <div
               className={`absolute top-1/2 -translate-y-1/2 w-3 h-3 rounded-full transition-all duration-75 ${getCentsColor().replace('text-', 'bg-')}`}
-              style={{ 
+              style={{
                 left: `${50 + (cents / 50) * 50}%`,
                 transform: 'translate(-50%, -50%)'
               }}
