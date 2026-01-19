@@ -1,0 +1,155 @@
+
+---
+events:
+  -
+    kind: "message-v1"
+    backtrace:
+      - "/usr/local/share/cmake/Modules/CMakeDetermineSystem.cmake:205 (message)"
+      - "CMakeLists.txt:17 (project)"
+    message: |
+      The system is: Darwin - 25.2.0 - x86_64
+  -
+    kind: "message-v1"
+    backtrace:
+      - "/usr/local/share/cmake/Modules/CMakeDetermineCompilerId.cmake:17 (message)"
+      - "/usr/local/share/cmake/Modules/CMakeDetermineCompilerId.cmake:64 (__determine_compiler_id_test)"
+      - "/usr/local/share/cmake/Modules/CMakeDetermineCCompiler.cmake:123 (CMAKE_DETERMINE_COMPILER_ID)"
+      - "CMakeLists.txt:17 (project)"
+    message: |
+      Compiling the C compiler identification source file "CMakeCCompilerId.c" failed.
+      Compiler:  
+      Build flags: 
+      Id flags:  
+      
+      The output was:
+      70
+      2026-01-11 07:20:32.400 xcodebuild[52822:4267756] [MT] DVTPlugInLoading: Failed to load code for plug-in com.apple.dt.IDESimulatorFoundation (/Applications/Xcode.app/Contents/Frameworks/IDESimulatorFoundation.framework), error = Error Domain=NSCocoaErrorDomain Code=3588 "dlopen(/Applications/Xcode.app/Contents/Frameworks/IDESimulatorFoundation.framework/IDESimulatorFoundation, 0x0109): Symbol not found: _$s12DVTDownloads19DownloadsGlobalInfoV23isDebugForParentProcess0E13InternalToolsACSb_SbtcfC
+        Referenced from: <B8506F6F-560E-34FB-9937-680DDF81FC92> /Applications/Xcode.app/Contents/Frameworks/IDESimulatorFoundation.framework/Versions/A/IDESimulatorFoundation
+        Expected in:     <D85B9033-859B-309E-88F3-75B6D3FDDA6B> /Library/Developer/PrivateFrameworks/DVTDownloads.framework/Versions/A/DVTDownloads" UserInfo={NSLocalizedFailureReason=The bundle couldn’t be loaded., NSLocalizedRecoverySuggestion=Try reinstalling the bundle., NSFilePath=/Applications/Xcode.app/Contents/Frameworks/IDESimulatorFoundation.framework/IDESimulatorFoundation, NSDebugDescription=dlopen(/Applications/Xcode.app/Contents/Frameworks/IDESimulatorFoundation.framework/IDESimulatorFoundation, 0x0109): Symbol not found: _$s12DVTDownloads19DownloadsGlobalInfoV23isDebugForParentProcess0E13InternalToolsACSb_SbtcfC
+        Referenced from: <B8506F6F-560E-34FB-9937-680DDF81FC92> /Applications/Xcode.app/Contents/Frameworks/IDESimulatorFoundation.framework/Versions/A/IDESimulatorFoundation
+        Expected in:     <D85B9033-859B-309E-88F3-75B6D3FDDA6B> /Library/Developer/PrivateFrameworks/DVTDownloads.framework/Versions/A/DVTDownloads, NSBundlePath=/Applications/Xcode.app/Contents/Frameworks/IDESimulatorFoundation.framework, NSLocalizedDescription=The bundle “IDESimulatorFoundation” couldn’t be loaded.}, dyldError = dlopen(/Applications/Xcode.app/Contents/Frameworks/IDESimulatorFoundation.framework/IDESimulatorFoundation, 0x0000): Symbol not found: _$s12DVTDownloads19DownloadsGlobalInfoV23isDebugForParentProcess0E13InternalToolsACSb_SbtcfC
+        Referenced from: <B8506F6F-560E-34FB-9937-680DDF81FC92> /Applications/Xcode.app/Contents/Frameworks/IDESimulatorFoundation.framework/Versions/A/IDESimulatorFoundation
+        Expected in:     <D85B9033-859B-309E-88F3-75B6D3FDDA6B> /Library/Developer/PrivateFrameworks/DVTDownloads.framework/Versions/A/DVTDownloads
+      
+      A required plugin failed to load. Please ensure system content is up-to-date — try running 'xcodebuild -runFirstLaunch'.
+      2026-01-11 07:20:32.401 xcodebuild[52822:4267756] [MT] DVTPlugInExtensionFaulting: Failed to fire fault for extension IDESimulatorFoundation/IDESimulatorFoundation.plugindata/plug-in[1]/extension[2]: Error Domain=DVTPlugInErrorDomain Code=2 "Loading a plug-in failed." UserInfo={DVTPlugInIdentifierErrorKey=com.apple.dt.IDESimulatorFoundation, DVTPlugInExecutablePathErrorKey=/Applications/Xcode.app/Contents/Frameworks/IDESimulatorFoundation.framework/IDESimulatorFoundation, NSLocalizedRecoverySuggestion=The plug-in or one of its prerequisite plug-ins may be missing or damaged and may need to be reinstalled., DVTPlugInDYLDErrorMessageErrorKey=dlopen(/Applications/Xcode.app/Contents/Frameworks/IDESimulatorFoundation.framework/IDESimulatorFoundation, 0x0000): Symbol not found: _$s12DVTDownloads19DownloadsGlobalInfoV23isDebugForParentProcess0E13InternalToolsACSb_SbtcfC
+        Referenced from: <B8506F6F-560E-34FB-9937-680DDF81FC92> /Applications/Xcode.app/Contents/Frameworks/IDESimulatorFoundation.framework/Versions/A/IDESimulatorFoundation
+        Expected in:     <D85B9033-859B-309E-88F3-75B6D3FDDA6B> /Library/Developer/PrivateFrameworks/DVTDownloads.framework/Versions/A/DVTDownloads, NSLocalizedDescription=Loading a plug-in failed., NSFilePath=/Applications/Xcode.app/Contents/Frameworks/IDESimulatorFoundation.framework, NSLocalizedFailureReason=The plug-in “com.apple.dt.IDESimulatorFoundation” at path “/Applications/Xcode.app/Contents/Frameworks/IDESimulatorFoundation.framework” could not be loaded.  The plug-in or one of its prerequisite plug-ins may be missing or damaged., NSUnderlyingError=0x7ff1353bb580 {Error Domain=NSCocoaErrorDomain Code=3588 "dlopen(/Applications/Xcode.app/Contents/Frameworks/IDESimulatorFoundation.framework/IDESimulatorFoundation, 0x0109): Symbol not found: _$s12DVTDownloads19DownloadsGlobalInfoV23isDebugForParentProcess0E13InternalToolsACSb_SbtcfC
+        Referenced from: <B8506F6F-560E-34FB-9937-680DDF81FC92> /Applications/Xcode.app/Contents/Frameworks/IDESimulatorFoundation.framework/Versions/A/IDESimulatorFoundation
+        Expected in:     <D85B9033-859B-309E-88F3-75B6D3FDDA6B> /Library/Developer/PrivateFrameworks/DVTDownloads.framework/Versions/A/DVTDownloads" UserInfo={NSLocalizedFailureReason=The bundle couldn’t be loaded., NSLocalizedRecoverySuggestion=Try reinstalling the bundle., NSFilePath=/Applications/Xcode.app/Contents/Frameworks/IDESimulatorFoundation.framework/IDESimulatorFoundation, NSDebugDescription=dlopen(/Applications/Xcode.app/Contents/Frameworks/IDESimulatorFoundation.framework/IDESimulatorFoundation, 0x0109): Symbol not found: _$s12DVTDownloads19DownloadsGlobalInfoV23isDebugForParentProcess0E13InternalToolsACSb_SbtcfC
+        Referenced from: <B8506F6F-560E-34FB-9937-680DDF81FC92> /Applications/Xcode.app/Contents/Frameworks/IDESimulatorFoundation.framework/Versions/A/IDESimulatorFoundation
+        Expected in:     <D85B9033-859B-309E-88F3-75B6D3FDDA6B> /Library/Developer/PrivateFrameworks/DVTDownloads.framework/Versions/A/DVTDownloads, NSBundlePath=/Applications/Xcode.app/Contents/Frameworks/IDESimulatorFoundation.framework, NSLocalizedDescription=The bundle “IDESimulatorFoundation” couldn’t be loaded.}}}
+      
+      
+      xcodebuild failed to load a required plug-in. Ensure your system frameworks are up-to-date by running 'xcodebuild -runFirstLaunch'
+      
+      
+  -
+    kind: "message-v1"
+    backtrace:
+      - "/usr/local/share/cmake/Modules/CMakeDetermineCompilerId.cmake:17 (message)"
+      - "/usr/local/share/cmake/Modules/CMakeDetermineCompilerId.cmake:64 (__determine_compiler_id_test)"
+      - "/usr/local/share/cmake/Modules/CMakeDetermineCCompiler.cmake:123 (CMAKE_DETERMINE_COMPILER_ID)"
+      - "CMakeLists.txt:17 (project)"
+    message: |
+      Compiling the C compiler identification source file "CMakeCCompilerId.c" failed.
+      Compiler:  
+      Build flags: 
+      Id flags:  
+      
+      The output was:
+      70
+      2026-01-11 07:20:33.242 xcodebuild[52836:4267802] [MT] DVTPlugInLoading: Failed to load code for plug-in com.apple.dt.IDESimulatorFoundation (/Applications/Xcode.app/Contents/Frameworks/IDESimulatorFoundation.framework), error = Error Domain=NSCocoaErrorDomain Code=3588 "dlopen(/Applications/Xcode.app/Contents/Frameworks/IDESimulatorFoundation.framework/IDESimulatorFoundation, 0x0109): Symbol not found: _$s12DVTDownloads19DownloadsGlobalInfoV23isDebugForParentProcess0E13InternalToolsACSb_SbtcfC
+        Referenced from: <B8506F6F-560E-34FB-9937-680DDF81FC92> /Applications/Xcode.app/Contents/Frameworks/IDESimulatorFoundation.framework/Versions/A/IDESimulatorFoundation
+        Expected in:     <D85B9033-859B-309E-88F3-75B6D3FDDA6B> /Library/Developer/PrivateFrameworks/DVTDownloads.framework/Versions/A/DVTDownloads" UserInfo={NSLocalizedFailureReason=The bundle couldn’t be loaded., NSLocalizedRecoverySuggestion=Try reinstalling the bundle., NSFilePath=/Applications/Xcode.app/Contents/Frameworks/IDESimulatorFoundation.framework/IDESimulatorFoundation, NSDebugDescription=dlopen(/Applications/Xcode.app/Contents/Frameworks/IDESimulatorFoundation.framework/IDESimulatorFoundation, 0x0109): Symbol not found: _$s12DVTDownloads19DownloadsGlobalInfoV23isDebugForParentProcess0E13InternalToolsACSb_SbtcfC
+        Referenced from: <B8506F6F-560E-34FB-9937-680DDF81FC92> /Applications/Xcode.app/Contents/Frameworks/IDESimulatorFoundation.framework/Versions/A/IDESimulatorFoundation
+        Expected in:     <D85B9033-859B-309E-88F3-75B6D3FDDA6B> /Library/Developer/PrivateFrameworks/DVTDownloads.framework/Versions/A/DVTDownloads, NSBundlePath=/Applications/Xcode.app/Contents/Frameworks/IDESimulatorFoundation.framework, NSLocalizedDescription=The bundle “IDESimulatorFoundation” couldn’t be loaded.}, dyldError = dlopen(/Applications/Xcode.app/Contents/Frameworks/IDESimulatorFoundation.framework/IDESimulatorFoundation, 0x0000): Symbol not found: _$s12DVTDownloads19DownloadsGlobalInfoV23isDebugForParentProcess0E13InternalToolsACSb_SbtcfC
+        Referenced from: <B8506F6F-560E-34FB-9937-680DDF81FC92> /Applications/Xcode.app/Contents/Frameworks/IDESimulatorFoundation.framework/Versions/A/IDESimulatorFoundation
+        Expected in:     <D85B9033-859B-309E-88F3-75B6D3FDDA6B> /Library/Developer/PrivateFrameworks/DVTDownloads.framework/Versions/A/DVTDownloads
+      
+      A required plugin failed to load. Please ensure system content is up-to-date — try running 'xcodebuild -runFirstLaunch'.
+      2026-01-11 07:20:33.243 xcodebuild[52836:4267802] [MT] DVTPlugInExtensionFaulting: Failed to fire fault for extension IDESimulatorFoundation/IDESimulatorFoundation.plugindata/plug-in[1]/extension[2]: Error Domain=DVTPlugInErrorDomain Code=2 "Loading a plug-in failed." UserInfo={DVTPlugInIdentifierErrorKey=com.apple.dt.IDESimulatorFoundation, DVTPlugInExecutablePathErrorKey=/Applications/Xcode.app/Contents/Frameworks/IDESimulatorFoundation.framework/IDESimulatorFoundation, NSLocalizedRecoverySuggestion=The plug-in or one of its prerequisite plug-ins may be missing or damaged and may need to be reinstalled., DVTPlugInDYLDErrorMessageErrorKey=dlopen(/Applications/Xcode.app/Contents/Frameworks/IDESimulatorFoundation.framework/IDESimulatorFoundation, 0x0000): Symbol not found: _$s12DVTDownloads19DownloadsGlobalInfoV23isDebugForParentProcess0E13InternalToolsACSb_SbtcfC
+        Referenced from: <B8506F6F-560E-34FB-9937-680DDF81FC92> /Applications/Xcode.app/Contents/Frameworks/IDESimulatorFoundation.framework/Versions/A/IDESimulatorFoundation
+        Expected in:     <D85B9033-859B-309E-88F3-75B6D3FDDA6B> /Library/Developer/PrivateFrameworks/DVTDownloads.framework/Versions/A/DVTDownloads, NSLocalizedDescription=Loading a plug-in failed., NSFilePath=/Applications/Xcode.app/Contents/Frameworks/IDESimulatorFoundation.framework, NSLocalizedFailureReason=The plug-in “com.apple.dt.IDESimulatorFoundation” at path “/Applications/Xcode.app/Contents/Frameworks/IDESimulatorFoundation.framework” could not be loaded.  The plug-in or one of its prerequisite plug-ins may be missing or damaged., NSUnderlyingError=0x7f90d8205e80 {Error Domain=NSCocoaErrorDomain Code=3588 "dlopen(/Applications/Xcode.app/Contents/Frameworks/IDESimulatorFoundation.framework/IDESimulatorFoundation, 0x0109): Symbol not found: _$s12DVTDownloads19DownloadsGlobalInfoV23isDebugForParentProcess0E13InternalToolsACSb_SbtcfC
+        Referenced from: <B8506F6F-560E-34FB-9937-680DDF81FC92> /Applications/Xcode.app/Contents/Frameworks/IDESimulatorFoundation.framework/Versions/A/IDESimulatorFoundation
+        Expected in:     <D85B9033-859B-309E-88F3-75B6D3FDDA6B> /Library/Developer/PrivateFrameworks/DVTDownloads.framework/Versions/A/DVTDownloads" UserInfo={NSLocalizedFailureReason=The bundle couldn’t be loaded., NSLocalizedRecoverySuggestion=Try reinstalling the bundle., NSFilePath=/Applications/Xcode.app/Contents/Frameworks/IDESimulatorFoundation.framework/IDESimulatorFoundation, NSDebugDescription=dlopen(/Applications/Xcode.app/Contents/Frameworks/IDESimulatorFoundation.framework/IDESimulatorFoundation, 0x0109): Symbol not found: _$s12DVTDownloads19DownloadsGlobalInfoV23isDebugForParentProcess0E13InternalToolsACSb_SbtcfC
+        Referenced from: <B8506F6F-560E-34FB-9937-680DDF81FC92> /Applications/Xcode.app/Contents/Frameworks/IDESimulatorFoundation.framework/Versions/A/IDESimulatorFoundation
+        Expected in:     <D85B9033-859B-309E-88F3-75B6D3FDDA6B> /Library/Developer/PrivateFrameworks/DVTDownloads.framework/Versions/A/DVTDownloads, NSBundlePath=/Applications/Xcode.app/Contents/Frameworks/IDESimulatorFoundation.framework, NSLocalizedDescription=The bundle “IDESimulatorFoundation” couldn’t be loaded.}}}
+      
+      
+      xcodebuild failed to load a required plug-in. Ensure your system frameworks are up-to-date by running 'xcodebuild -runFirstLaunch'
+      
+      
+  -
+    kind: "message-v1"
+    backtrace:
+      - "/usr/local/share/cmake/Modules/CMakeDetermineCompilerId.cmake:17 (message)"
+      - "/usr/local/share/cmake/Modules/CMakeDetermineCompilerId.cmake:64 (__determine_compiler_id_test)"
+      - "/usr/local/share/cmake/Modules/CMakeDetermineCXXCompiler.cmake:126 (CMAKE_DETERMINE_COMPILER_ID)"
+      - "CMakeLists.txt:17 (project)"
+    message: |
+      Compiling the CXX compiler identification source file "CMakeCXXCompilerId.cpp" failed.
+      Compiler:  
+      Build flags: 
+      Id flags:  
+      
+      The output was:
+      70
+      2026-01-11 07:20:34.120 xcodebuild[52860:4267846] [MT] DVTPlugInLoading: Failed to load code for plug-in com.apple.dt.IDESimulatorFoundation (/Applications/Xcode.app/Contents/Frameworks/IDESimulatorFoundation.framework), error = Error Domain=NSCocoaErrorDomain Code=3588 "dlopen(/Applications/Xcode.app/Contents/Frameworks/IDESimulatorFoundation.framework/IDESimulatorFoundation, 0x0109): Symbol not found: _$s12DVTDownloads19DownloadsGlobalInfoV23isDebugForParentProcess0E13InternalToolsACSb_SbtcfC
+        Referenced from: <B8506F6F-560E-34FB-9937-680DDF81FC92> /Applications/Xcode.app/Contents/Frameworks/IDESimulatorFoundation.framework/Versions/A/IDESimulatorFoundation
+        Expected in:     <D85B9033-859B-309E-88F3-75B6D3FDDA6B> /Library/Developer/PrivateFrameworks/DVTDownloads.framework/Versions/A/DVTDownloads" UserInfo={NSLocalizedFailureReason=The bundle couldn’t be loaded., NSLocalizedRecoverySuggestion=Try reinstalling the bundle., NSFilePath=/Applications/Xcode.app/Contents/Frameworks/IDESimulatorFoundation.framework/IDESimulatorFoundation, NSDebugDescription=dlopen(/Applications/Xcode.app/Contents/Frameworks/IDESimulatorFoundation.framework/IDESimulatorFoundation, 0x0109): Symbol not found: _$s12DVTDownloads19DownloadsGlobalInfoV23isDebugForParentProcess0E13InternalToolsACSb_SbtcfC
+        Referenced from: <B8506F6F-560E-34FB-9937-680DDF81FC92> /Applications/Xcode.app/Contents/Frameworks/IDESimulatorFoundation.framework/Versions/A/IDESimulatorFoundation
+        Expected in:     <D85B9033-859B-309E-88F3-75B6D3FDDA6B> /Library/Developer/PrivateFrameworks/DVTDownloads.framework/Versions/A/DVTDownloads, NSBundlePath=/Applications/Xcode.app/Contents/Frameworks/IDESimulatorFoundation.framework, NSLocalizedDescription=The bundle “IDESimulatorFoundation” couldn’t be loaded.}, dyldError = dlopen(/Applications/Xcode.app/Contents/Frameworks/IDESimulatorFoundation.framework/IDESimulatorFoundation, 0x0000): Symbol not found: _$s12DVTDownloads19DownloadsGlobalInfoV23isDebugForParentProcess0E13InternalToolsACSb_SbtcfC
+        Referenced from: <B8506F6F-560E-34FB-9937-680DDF81FC92> /Applications/Xcode.app/Contents/Frameworks/IDESimulatorFoundation.framework/Versions/A/IDESimulatorFoundation
+        Expected in:     <D85B9033-859B-309E-88F3-75B6D3FDDA6B> /Library/Developer/PrivateFrameworks/DVTDownloads.framework/Versions/A/DVTDownloads
+      
+      A required plugin failed to load. Please ensure system content is up-to-date — try running 'xcodebuild -runFirstLaunch'.
+      2026-01-11 07:20:34.121 xcodebuild[52860:4267846] [MT] DVTPlugInExtensionFaulting: Failed to fire fault for extension IDESimulatorFoundation/IDESimulatorFoundation.plugindata/plug-in[1]/extension[2]: Error Domain=DVTPlugInErrorDomain Code=2 "Loading a plug-in failed." UserInfo={DVTPlugInIdentifierErrorKey=com.apple.dt.IDESimulatorFoundation, DVTPlugInExecutablePathErrorKey=/Applications/Xcode.app/Contents/Frameworks/IDESimulatorFoundation.framework/IDESimulatorFoundation, NSLocalizedRecoverySuggestion=The plug-in or one of its prerequisite plug-ins may be missing or damaged and may need to be reinstalled., DVTPlugInDYLDErrorMessageErrorKey=dlopen(/Applications/Xcode.app/Contents/Frameworks/IDESimulatorFoundation.framework/IDESimulatorFoundation, 0x0000): Symbol not found: _$s12DVTDownloads19DownloadsGlobalInfoV23isDebugForParentProcess0E13InternalToolsACSb_SbtcfC
+        Referenced from: <B8506F6F-560E-34FB-9937-680DDF81FC92> /Applications/Xcode.app/Contents/Frameworks/IDESimulatorFoundation.framework/Versions/A/IDESimulatorFoundation
+        Expected in:     <D85B9033-859B-309E-88F3-75B6D3FDDA6B> /Library/Developer/PrivateFrameworks/DVTDownloads.framework/Versions/A/DVTDownloads, NSLocalizedDescription=Loading a plug-in failed., NSFilePath=/Applications/Xcode.app/Contents/Frameworks/IDESimulatorFoundation.framework, NSLocalizedFailureReason=The plug-in “com.apple.dt.IDESimulatorFoundation” at path “/Applications/Xcode.app/Contents/Frameworks/IDESimulatorFoundation.framework” could not be loaded.  The plug-in or one of its prerequisite plug-ins may be missing or damaged., NSUnderlyingError=0x7faab5717c00 {Error Domain=NSCocoaErrorDomain Code=3588 "dlopen(/Applications/Xcode.app/Contents/Frameworks/IDESimulatorFoundation.framework/IDESimulatorFoundation, 0x0109): Symbol not found: _$s12DVTDownloads19DownloadsGlobalInfoV23isDebugForParentProcess0E13InternalToolsACSb_SbtcfC
+        Referenced from: <B8506F6F-560E-34FB-9937-680DDF81FC92> /Applications/Xcode.app/Contents/Frameworks/IDESimulatorFoundation.framework/Versions/A/IDESimulatorFoundation
+        Expected in:     <D85B9033-859B-309E-88F3-75B6D3FDDA6B> /Library/Developer/PrivateFrameworks/DVTDownloads.framework/Versions/A/DVTDownloads" UserInfo={NSLocalizedFailureReason=The bundle couldn’t be loaded., NSLocalizedRecoverySuggestion=Try reinstalling the bundle., NSFilePath=/Applications/Xcode.app/Contents/Frameworks/IDESimulatorFoundation.framework/IDESimulatorFoundation, NSDebugDescription=dlopen(/Applications/Xcode.app/Contents/Frameworks/IDESimulatorFoundation.framework/IDESimulatorFoundation, 0x0109): Symbol not found: _$s12DVTDownloads19DownloadsGlobalInfoV23isDebugForParentProcess0E13InternalToolsACSb_SbtcfC
+        Referenced from: <B8506F6F-560E-34FB-9937-680DDF81FC92> /Applications/Xcode.app/Contents/Frameworks/IDESimulatorFoundation.framework/Versions/A/IDESimulatorFoundation
+        Expected in:     <D85B9033-859B-309E-88F3-75B6D3FDDA6B> /Library/Developer/PrivateFrameworks/DVTDownloads.framework/Versions/A/DVTDownloads, NSBundlePath=/Applications/Xcode.app/Contents/Frameworks/IDESimulatorFoundation.framework, NSLocalizedDescription=The bundle “IDESimulatorFoundation” couldn’t be loaded.}}}
+      
+      
+      xcodebuild failed to load a required plug-in. Ensure your system frameworks are up-to-date by running 'xcodebuild -runFirstLaunch'
+      
+      
+  -
+    kind: "message-v1"
+    backtrace:
+      - "/usr/local/share/cmake/Modules/CMakeDetermineCompilerId.cmake:17 (message)"
+      - "/usr/local/share/cmake/Modules/CMakeDetermineCompilerId.cmake:64 (__determine_compiler_id_test)"
+      - "/usr/local/share/cmake/Modules/CMakeDetermineCXXCompiler.cmake:126 (CMAKE_DETERMINE_COMPILER_ID)"
+      - "CMakeLists.txt:17 (project)"
+    message: |
+      Compiling the CXX compiler identification source file "CMakeCXXCompilerId.cpp" failed.
+      Compiler:  
+      Build flags: 
+      Id flags:  
+      
+      The output was:
+      70
+      2026-01-11 07:20:34.947 xcodebuild[52872:4267884] [MT] DVTPlugInLoading: Failed to load code for plug-in com.apple.dt.IDESimulatorFoundation (/Applications/Xcode.app/Contents/Frameworks/IDESimulatorFoundation.framework), error = Error Domain=NSCocoaErrorDomain Code=3588 "dlopen(/Applications/Xcode.app/Contents/Frameworks/IDESimulatorFoundation.framework/IDESimulatorFoundation, 0x0109): Symbol not found: _$s12DVTDownloads19DownloadsGlobalInfoV23isDebugForParentProcess0E13InternalToolsACSb_SbtcfC
+        Referenced from: <B8506F6F-560E-34FB-9937-680DDF81FC92> /Applications/Xcode.app/Contents/Frameworks/IDESimulatorFoundation.framework/Versions/A/IDESimulatorFoundation
+        Expected in:     <D85B9033-859B-309E-88F3-75B6D3FDDA6B> /Library/Developer/PrivateFrameworks/DVTDownloads.framework/Versions/A/DVTDownloads" UserInfo={NSLocalizedFailureReason=The bundle couldn’t be loaded., NSLocalizedRecoverySuggestion=Try reinstalling the bundle., NSFilePath=/Applications/Xcode.app/Contents/Frameworks/IDESimulatorFoundation.framework/IDESimulatorFoundation, NSDebugDescription=dlopen(/Applications/Xcode.app/Contents/Frameworks/IDESimulatorFoundation.framework/IDESimulatorFoundation, 0x0109): Symbol not found: _$s12DVTDownloads19DownloadsGlobalInfoV23isDebugForParentProcess0E13InternalToolsACSb_SbtcfC
+        Referenced from: <B8506F6F-560E-34FB-9937-680DDF81FC92> /Applications/Xcode.app/Contents/Frameworks/IDESimulatorFoundation.framework/Versions/A/IDESimulatorFoundation
+        Expected in:     <D85B9033-859B-309E-88F3-75B6D3FDDA6B> /Library/Developer/PrivateFrameworks/DVTDownloads.framework/Versions/A/DVTDownloads, NSBundlePath=/Applications/Xcode.app/Contents/Frameworks/IDESimulatorFoundation.framework, NSLocalizedDescription=The bundle “IDESimulatorFoundation” couldn’t be loaded.}, dyldError = dlopen(/Applications/Xcode.app/Contents/Frameworks/IDESimulatorFoundation.framework/IDESimulatorFoundation, 0x0000): Symbol not found: _$s12DVTDownloads19DownloadsGlobalInfoV23isDebugForParentProcess0E13InternalToolsACSb_SbtcfC
+        Referenced from: <B8506F6F-560E-34FB-9937-680DDF81FC92> /Applications/Xcode.app/Contents/Frameworks/IDESimulatorFoundation.framework/Versions/A/IDESimulatorFoundation
+        Expected in:     <D85B9033-859B-309E-88F3-75B6D3FDDA6B> /Library/Developer/PrivateFrameworks/DVTDownloads.framework/Versions/A/DVTDownloads
+      
+      A required plugin failed to load. Please ensure system content is up-to-date — try running 'xcodebuild -runFirstLaunch'.
+      2026-01-11 07:20:34.948 xcodebuild[52872:4267884] [MT] DVTPlugInExtensionFaulting: Failed to fire fault for extension IDESimulatorFoundation/IDESimulatorFoundation.plugindata/plug-in[1]/extension[2]: Error Domain=DVTPlugInErrorDomain Code=2 "Loading a plug-in failed." UserInfo={DVTPlugInIdentifierErrorKey=com.apple.dt.IDESimulatorFoundation, DVTPlugInExecutablePathErrorKey=/Applications/Xcode.app/Contents/Frameworks/IDESimulatorFoundation.framework/IDESimulatorFoundation, NSLocalizedRecoverySuggestion=The plug-in or one of its prerequisite plug-ins may be missing or damaged and may need to be reinstalled., DVTPlugInDYLDErrorMessageErrorKey=dlopen(/Applications/Xcode.app/Contents/Frameworks/IDESimulatorFoundation.framework/IDESimulatorFoundation, 0x0000): Symbol not found: _$s12DVTDownloads19DownloadsGlobalInfoV23isDebugForParentProcess0E13InternalToolsACSb_SbtcfC
+        Referenced from: <B8506F6F-560E-34FB-9937-680DDF81FC92> /Applications/Xcode.app/Contents/Frameworks/IDESimulatorFoundation.framework/Versions/A/IDESimulatorFoundation
+        Expected in:     <D85B9033-859B-309E-88F3-75B6D3FDDA6B> /Library/Developer/PrivateFrameworks/DVTDownloads.framework/Versions/A/DVTDownloads, NSLocalizedDescription=Loading a plug-in failed., NSFilePath=/Applications/Xcode.app/Contents/Frameworks/IDESimulatorFoundation.framework, NSLocalizedFailureReason=The plug-in “com.apple.dt.IDESimulatorFoundation” at path “/Applications/Xcode.app/Contents/Frameworks/IDESimulatorFoundation.framework” could not be loaded.  The plug-in or one of its prerequisite plug-ins may be missing or damaged., NSUnderlyingError=0x7f9a598e7e10 {Error Domain=NSCocoaErrorDomain Code=3588 "dlopen(/Applications/Xcode.app/Contents/Frameworks/IDESimulatorFoundation.framework/IDESimulatorFoundation, 0x0109): Symbol not found: _$s12DVTDownloads19DownloadsGlobalInfoV23isDebugForParentProcess0E13InternalToolsACSb_SbtcfC
+        Referenced from: <B8506F6F-560E-34FB-9937-680DDF81FC92> /Applications/Xcode.app/Contents/Frameworks/IDESimulatorFoundation.framework/Versions/A/IDESimulatorFoundation
+        Expected in:     <D85B9033-859B-309E-88F3-75B6D3FDDA6B> /Library/Developer/PrivateFrameworks/DVTDownloads.framework/Versions/A/DVTDownloads" UserInfo={NSLocalizedFailureReason=The bundle couldn’t be loaded., NSLocalizedRecoverySuggestion=Try reinstalling the bundle., NSFilePath=/Applications/Xcode.app/Contents/Frameworks/IDESimulatorFoundation.framework/IDESimulatorFoundation, NSDebugDescription=dlopen(/Applications/Xcode.app/Contents/Frameworks/IDESimulatorFoundation.framework/IDESimulatorFoundation, 0x0109): Symbol not found: _$s12DVTDownloads19DownloadsGlobalInfoV23isDebugForParentProcess0E13InternalToolsACSb_SbtcfC
+        Referenced from: <B8506F6F-560E-34FB-9937-680DDF81FC92> /Applications/Xcode.app/Contents/Frameworks/IDESimulatorFoundation.framework/Versions/A/IDESimulatorFoundation
+        Expected in:     <D85B9033-859B-309E-88F3-75B6D3FDDA6B> /Library/Developer/PrivateFrameworks/DVTDownloads.framework/Versions/A/DVTDownloads, NSBundlePath=/Applications/Xcode.app/Contents/Frameworks/IDESimulatorFoundation.framework, NSLocalizedDescription=The bundle “IDESimulatorFoundation” couldn’t be loaded.}}}
+      
+      
+      xcodebuild failed to load a required plug-in. Ensure your system frameworks are up-to-date by running 'xcodebuild -runFirstLaunch'
+      
+      
+...

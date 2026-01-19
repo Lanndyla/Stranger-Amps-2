@@ -1,5 +1,7 @@
 # DJENT SLAYER - Amp Simulator
 
+https://replit.com/@strangerdangerd/Djent-Engine-X
+
 ## Overview
 
 DJENT SLAYER is a web-based guitar amplifier simulator designed for extended range guitars and low tunings (7, 8, 9 string djent guitars). The application provides a skeuomorphic interface mimicking professional guitar amp hardware, featuring realistic rotary knobs, toggle switches, LED indicators, and cabinet simulation with impulse response (IR) selection.
